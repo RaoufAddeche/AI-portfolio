@@ -1,7 +1,7 @@
 """Modèles Pydantic partagés par les routers."""
 from datetime import date, datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # ---------- Portfolio (items auto-générés depuis GitHub) ----------
@@ -243,6 +243,15 @@ class ContactSubmission(BaseModel):
     subject: str | None = None
     message: str
     contact_reason: str | None = None
+
+
+class TestimonialSubmission(BaseModel):
+    author_name: str = Field(..., min_length=2, max_length=200)
+    author_title: str = Field(..., min_length=2, max_length=200)
+    author_company: str | None = Field(None, max_length=200)
+    author_linkedin_url: str | None = Field(None, max_length=500)
+    relationship: str | None = Field(None, max_length=200)
+    quote: str = Field(..., min_length=10, max_length=1500)
 
 
 # ---------- Phase 3 : dual mode + analytics ----------

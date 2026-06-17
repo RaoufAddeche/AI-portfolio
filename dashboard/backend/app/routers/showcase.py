@@ -1,13 +1,47 @@
 """Phase 2 : projets, blog, témoignages, stats GitHub et formulaire de contact."""
+import hashlib
+import hmac
 import json
+import time
+from collections import defaultdict, deque
 
 import asyncpg
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse
 
+from ..config import get_settings
 from ..db import get_db
-from ..models import BlogPost, ContactSubmission, GitHubStats, Project, Testimonial
+from ..models import (
+    BlogPost,
+    ContactSubmission,
+    GitHubStats,
+    Project,
+    Testimonial,
+    TestimonialSubmission,
+)
+from ..services import email
 
 router = APIRouter(tags=["showcase"])
+
+# Anti-spam soumission d'avis : fenêtre glissante par IP.
+_TESTI_WINDOW = 600.0  # 10 min
+_TESTI_MAX = 3
+_testi_hits: dict[str, deque] = defaultdict(deque)
+
+
+def _testi_rate_limited(ip: str) -> bool:
+    now = time.monotonic()
+    dq = _testi_hits[ip]
+    while dq and now - dq[0] > _TESTI_WINDOW:
+        dq.popleft()
+    if len(dq) >= _TESTI_MAX:
+        return True
+    dq.append(now)
+    return False
+
+
+def _approve_signature(item_id: int, secret: str) -> str:
+    return hmac.new(secret.encode(), str(item_id).encode(), hashlib.sha256).hexdigest()[:32]
 
 
 def _project_from_row(row) -> Project:
@@ -123,6 +157,82 @@ async def get_testimonials(
     return [Testimonial(**dict(row)) for row in rows]
 
 
+@router.post("/api/testimonials")
+async def submit_testimonial(
+    submission: TestimonialSubmission,
+    request: Request,
+    conn: asyncpg.Connection = Depends(get_db),
+):
+    """Soumettre un avis. Stocké NON publié → notification email avec lien d'approbation."""
+    ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (
+        request.client.host if request.client else "unknown"
+    )
+    if _testi_rate_limited(ip):
+        raise HTTPException(status_code=429, detail="Trop d'envois. Réessayez plus tard.")
+
+    row = await conn.fetchrow(
+        """
+        INSERT INTO testimonials
+            (author_name, author_title, author_company, author_linkedin_url,
+             relationship, quote, is_published, is_featured)
+        VALUES ($1, $2, $3, $4, $5, $6, FALSE, FALSE)
+        RETURNING id
+        """,
+        submission.author_name,
+        submission.author_title,
+        submission.author_company,
+        submission.author_linkedin_url,
+        submission.relationship,
+        submission.quote,
+    )
+
+    settings = get_settings()
+    approve_url = None
+    if settings.admin_token:
+        sig = _approve_signature(row["id"], settings.admin_token)
+        approve_url = (
+            f"{settings.public_base_url}/api/testimonials/{row['id']}/approve?token={sig}"
+        )
+    try:
+        await email.send_testimonial_notification(
+            submission.author_name,
+            submission.author_title,
+            submission.author_company,
+            submission.quote,
+            approve_url,
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
+    return {"success": True, "message": "Merci ! Votre avis sera publié après validation."}
+
+
+@router.get("/api/testimonials/{item_id}/approve", response_class=HTMLResponse)
+async def approve_testimonial(
+    item_id: int, token: str, conn: asyncpg.Connection = Depends(get_db)
+):
+    """Publier un avis depuis le lien signé reçu par email (modération en un clic)."""
+    settings = get_settings()
+    if not settings.admin_token:
+        raise HTTPException(status_code=503, detail="Modération non configurée (ADMIN_TOKEN)")
+    if not hmac.compare_digest(token, _approve_signature(item_id, settings.admin_token)):
+        raise HTTPException(status_code=403, detail="Lien d'approbation invalide")
+
+    result = await conn.execute(
+        "UPDATE testimonials SET is_published = TRUE, is_featured = TRUE, "
+        "updated_at = NOW() WHERE id = $1",
+        item_id,
+    )
+    if result == "UPDATE 0":
+        raise HTTPException(status_code=404, detail="Avis introuvable")
+
+    return HTMLResponse(
+        "<html><body style=\"font-family:system-ui;text-align:center;padding:4rem\">"
+        "<h2>Avis approuvé ✅</h2><p>Il est maintenant visible sur le portfolio.</p>"
+        "</body></html>"
+    )
+
+
 @router.get("/api/github-stats", response_model=GitHubStats)
 async def get_github_stats(
     username: str | None = None, conn: asyncpg.Connection = Depends(get_db)
@@ -167,6 +277,13 @@ async def submit_contact_form(
         submission.message,
         submission.contact_reason,
     )
+    # Notification best-effort : le message est déjà en base, on n'échoue pas si l'email casse.
+    try:
+        await email.send_contact_notification(
+            submission.name, submission.email, submission.subject, submission.message
+        )
+    except Exception:  # noqa: BLE001
+        pass
     return {
         "success": True,
         "message": "Message envoyé avec succès!",

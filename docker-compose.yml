@@ -42,6 +42,11 @@ services:
       - SYNC_TOKEN=${SYNC_TOKEN:-}
       - CHAT_RATE_PER_MINUTE=${CHAT_RATE_PER_MINUTE:-6}
       - CHAT_DAILY_LIMIT=${CHAT_DAILY_LIMIT:-300}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - CONTACT_NOTIFY_TO=${CONTACT_NOTIFY_TO:-addeche.raouf@gmail.com}
+      - CONTACT_FROM=${CONTACT_FROM:-Portfolio <onboarding@resend.dev>}
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-}
+      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-http://localhost:8000}
     ports:
       - "8000:8000"
     depends_on:

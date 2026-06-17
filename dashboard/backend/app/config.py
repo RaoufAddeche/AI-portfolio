@@ -37,6 +37,17 @@ class Settings(BaseSettings):
     # Si défini, l'appel exige l'en-tête X-Sync-Token. Vide = pas de contrôle (dev local).
     sync_token: str | None = None
 
+    # Notification email des messages de contact (via Resend). Si la clé est
+    # absente, le message reste enregistré en base mais aucun email n'est envoyé.
+    resend_api_key: str | None = None
+    contact_notify_to: str = "addeche.raouf@gmail.com"
+    contact_from: str = "Portfolio <onboarding@resend.dev>"
+
+    # Modération des avis : secret pour signer les liens d'approbation (HMAC) et
+    # URL publique de l'API (pour construire le lien cliquable dans l'email).
+    admin_token: str | None = None
+    public_base_url: str = "http://localhost:8000"
+
     @property
     def dsn(self) -> str:
         return (
