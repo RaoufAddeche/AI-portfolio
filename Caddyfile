@@ -1,0 +1,6 @@
+# Caddy : HTTPS automatique (Let's Encrypt) pour le domaine défini dans .env (DOMAIN).
+# Tout le trafic est servi par le frontend (nginx), qui sert le site et proxifie /api.
+{$DOMAIN} {
+	encode gzip zstd
+	reverse_proxy frontend:80
+}

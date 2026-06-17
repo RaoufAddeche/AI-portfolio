@@ -1,0 +1,84 @@
+# Déploiement production : db + backend + frontend INTERNES (non exposés),
+# Caddy en frontal (80/443) avec HTTPS automatique (Let's Encrypt).
+# Limites mémoire volontairement basses : ce VPS héberge aussi le bot de trading.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+services:
+  db:
+    image: postgres:15
+    container_name: portfolio-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ./volumes/postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 384m
+    networks: [portfolio_net]
+
+  backend:
+    build: ./dashboard/backend
+    container_name: portfolio-backend
+    restart: unless-stopped
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_NAME=${POSTGRES_DB}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_USERNAME=${GITHUB_USERNAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+      - SYNC_TOKEN=${SYNC_TOKEN}
+      - CHAT_RATE_PER_MINUTE=${CHAT_RATE_PER_MINUTE:-6}
+      - CHAT_DAILY_LIMIT=${CHAT_DAILY_LIMIT:-300}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - CONTACT_NOTIFY_TO=${CONTACT_NOTIFY_TO:-addeche.raouf@gmail.com}
+      - CONTACT_FROM=${CONTACT_FROM:-Portfolio <onboarding@resend.dev>}
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - PUBLIC_BASE_URL=https://${DOMAIN}
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 384m
+    networks: [portfolio_net]
+
+  frontend:
+    build: ./dashboard/frontend
+    container_name: portfolio-frontend
+    restart: unless-stopped
+    depends_on: [backend]
+    mem_limit: 96m
+    networks: [portfolio_net]
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: portfolio-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [frontend]
+    mem_limit: 96m
+    networks: [portfolio_net]
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  portfolio_net:
