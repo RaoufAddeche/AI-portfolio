@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from ..config import get_settings
 from ..db import get_db
+from ..i18n import localize
 from ..services import llm
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -23,6 +24,7 @@ _hits: dict[str, deque] = defaultdict(deque)
 
 class ChatRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=500)
+    lang: str = "fr"
 
 
 def _client_ip(request: Request) -> str:
@@ -45,28 +47,26 @@ def _rate_limited(ip: str, limit: int) -> bool:
     return False
 
 
-async def _build_context(conn: asyncpg.Connection) -> str:
-    """Concatène les données du portfolio en un contexte texte compact."""
+async def _build_context(conn: asyncpg.Connection, lang: str = "fr") -> str:
+    """Concatène les données du portfolio (localisées) en un contexte texte compact."""
     parts: list[str] = []
 
-    profile = await conn.fetchrow("SELECT * FROM profile LIMIT 1")
-    if profile:
+    row = await conn.fetchrow("SELECT * FROM profile LIMIT 1")
+    if row:
+        p = localize(dict(row), lang, ["title", "bio", "hero_pitch", "availability"])
         parts.append(
-            f"PROFIL\nNom: {profile['full_name']}\nTitre: {profile['title']}\n"
-            f"Bio: {profile['bio']}\nAccroche: {profile['hero_pitch']}\n"
-            f"Localisation: {profile['location']} ({profile['availability']})\n"
-            f"Email: {profile['email']}"
+            f"PROFIL\nNom: {p['full_name']}\nTitre: {p['title']}\n"
+            f"Bio: {p['bio']}\nAccroche: {p['hero_pitch']}\n"
+            f"Localisation: {p['location']} ({p['availability']})\n"
+            f"Email: {p['email']}"
         )
 
-    timeline = await conn.fetch(
-        "SELECT date, end_date, title, description, category FROM timeline_events ORDER BY date"
-    )
+    timeline = await conn.fetch("SELECT * FROM timeline_events ORDER BY date")
     if timeline:
-        lines = [
-            f"- [{e['category']}] {e['title']} ({e['date']:%Y}"
-            f"{('–' + format(e['end_date'], '%Y')) if e['end_date'] else ''}): {e['description']}"
-            for e in timeline
-        ]
+        lines = []
+        for e in (localize(dict(r), lang, ["title", "description"]) for r in timeline):
+            span = e["date"].strftime("%Y") + (f"–{e['end_date']:%Y}" if e["end_date"] else "")
+            lines.append(f"- [{e['category']}] {e['title']} ({span}): {e['description']}")
         parts.append("PARCOURS\n" + "\n".join(lines))
 
     skills = await conn.fetch("SELECT name FROM skills ORDER BY subcategory, name")
@@ -74,15 +74,17 @@ async def _build_context(conn: asyncpg.Connection) -> str:
         parts.append("COMPÉTENCES\n" + ", ".join(s["name"] for s in skills))
 
     projects = await conn.fetch(
-        "SELECT title, short_pitch, stack, github_url, category FROM portfolio_items "
-        "ORDER BY ai_confidence_score DESC LIMIT 20"
+        "SELECT title, short_pitch, short_pitch_en, stack, github_url, category "
+        "FROM portfolio_items ORDER BY ai_confidence_score DESC LIMIT 20"
     )
     if projects:
-        lines = [
-            f"- {p['title']} [{p['category'] or 'projet'}]: {p['short_pitch']} "
-            f"(stack: {', '.join(p['stack']) if p['stack'] else 'n/a'}; {p['github_url']})"
-            for p in projects
-        ]
+        lines = []
+        for p in (localize(dict(r), lang, ["short_pitch"]) for r in projects):
+            stack = ", ".join(p["stack"]) if p["stack"] else "n/a"
+            lines.append(
+                f"- {p['title']} [{p['category'] or 'projet'}]: {p['short_pitch']} "
+                f"(stack: {stack}; {p['github_url']})"
+            )
         parts.append("PROJETS\n" + "\n".join(lines))
 
     return "\n\n".join(parts)
@@ -115,9 +117,9 @@ async def chat(
             "Contactez Raouf directement via le formulaire.",
         )
 
-    context = await _build_context(conn)
+    context = await _build_context(conn, req.lang)
     try:
-        answer = await llm.answer_question(req.question, context)
+        answer = await llm.answer_question(req.question, context, req.lang)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"LLM: {exc}") from exc
 

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, X, Check, ChevronRight } from "lucide-react";
 import { SectionHead } from "./Timeline";
+import { useLang } from "../../i18n.jsx";
 
 export default function CaseStudies({ studies = [] }) {
+  const { t } = useLang();
   const [selected, setSelected] = useState(null);
 
   // Bloque le scroll du body quand le modal est ouvert.
@@ -19,9 +21,9 @@ export default function CaseStudies({ studies = [] }) {
     <section id="etudes-de-cas" className="section">
       <div className="container-page">
         <SectionHead
-          overline="Études de cas"
-          title="Des projets en production, racontés"
-          description="Le contexte, l’architecture et les résultats — au-delà du dépôt de code."
+          overline={t("cases.overline")}
+          title={t("cases.title")}
+          description={t("cases.description")}
         />
 
         <div className="mt-12 grid gap-6 md:grid-cols-2">
@@ -50,7 +52,7 @@ export default function CaseStudies({ studies = [] }) {
               </div>
 
               <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
-                Lire l’étude de cas
+                {t("cases.read")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
               </span>
             </button>
@@ -64,6 +66,7 @@ export default function CaseStudies({ studies = [] }) {
 }
 
 function CaseModal({ study, onClose }) {
+  const { t } = useLang();
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -100,12 +103,12 @@ function CaseModal({ study, onClose }) {
         </div>
 
         <div className="space-y-8 px-6 py-7">
-          {study.problem && <Block label="Le problème" text={study.problem} />}
-          {study.approach && <Block label="L’approche" text={study.approach} />}
+          {study.problem && <Block label={t("cases.problem")} text={study.problem} />}
+          {study.approach && <Block label={t("cases.approach")} text={study.approach} />}
 
           {study.architecture?.length > 0 && (
             <div>
-              <p className="overline mb-4">Architecture</p>
+              <p className="overline mb-4">{t("cases.architecture")}</p>
               <div className="flex flex-col gap-2">
                 {study.architecture.map((a, i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -124,7 +127,7 @@ function CaseModal({ study, onClose }) {
 
           {study.results?.length > 0 && (
             <div>
-              <p className="overline mb-4">Résultats</p>
+              <p className="overline mb-4">{t("cases.results")}</p>
               <ul className="space-y-2.5">
                 {study.results.map((r, i) => (
                   <li key={i} className="flex gap-3 text-sm text-body">
@@ -138,7 +141,7 @@ function CaseModal({ study, onClose }) {
 
           {study.stack?.length > 0 && (
             <div>
-              <p className="overline mb-3">Stack</p>
+              <p className="overline mb-3">{t("cases.stack")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {study.stack.map((t, i) => (
                   <span key={i} className="chip">

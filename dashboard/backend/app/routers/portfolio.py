@@ -5,6 +5,7 @@ import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..db import get_db
+from ..i18n import localize
 from ..models import PortfolioEvent, PortfolioItem, PortfolioStats
 
 router = APIRouter(tags=["portfolio"])
@@ -26,11 +27,12 @@ async def get_portfolio_items(
     language: str | None = Query(None, description="Filter by language"),
     min_confidence: float | None = Query(None, description="Minimum confidence score"),
     limit: int = Query(50, description="Limit results"),
+    lang: str = Query("fr"),
     conn: asyncpg.Connection = Depends(get_db),
 ):
     """Récupérer les items du portfolio avec filtres optionnels."""
     query = """
-        SELECT id, repo, title, short_pitch, long_desc, tags, stack, impact,
+        SELECT id, repo, title, short_pitch, short_pitch_en, long_desc, tags, stack, impact,
                github_url, github_stars, github_forks, github_language,
                last_commit_date, ai_confidence_score, status, created_at,
                updated_at, human_reviewed, business_metrics, technical_metrics,
@@ -65,7 +67,7 @@ async def get_portfolio_items(
         params.append(limit)
 
     rows = await conn.fetch(query, *params)
-    return [PortfolioItem(**_normalize_item(row)) for row in rows]
+    return [PortfolioItem(**localize(_normalize_item(row), lang, ["short_pitch"])) for row in rows]
 
 
 @router.get("/api/portfolio/{item_id}", response_model=PortfolioItem)

@@ -5,18 +5,22 @@ import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..db import get_db
+from ..i18n import localize
 from ..models import Profile, Skill, SocialLink, TimelineEvent
 
 router = APIRouter(tags=["profile"])
 
 
 @router.get("/api/profile", response_model=Profile)
-async def get_profile(conn: asyncpg.Connection = Depends(get_db)):
+async def get_profile(
+    lang: str = Query("fr"), conn: asyncpg.Connection = Depends(get_db)
+):
     """Récupérer les informations de profil."""
     row = await conn.fetchrow("SELECT * FROM profile LIMIT 1")
     if not row:
         raise HTTPException(status_code=404, detail="Profile not found")
-    return Profile(**dict(row))
+    data = localize(dict(row), lang, ["title", "bio", "hero_pitch", "availability"])
+    return Profile(**data)
 
 
 @router.put("/api/profile")
@@ -43,6 +47,7 @@ async def update_profile(profile_data: dict, conn: asyncpg.Connection = Depends(
 async def get_timeline(
     category: str | None = Query(None, description="Filter by category"),
     highlights_only: bool = Query(False, description="Show only highlights"),
+    lang: str = Query("fr"),
     conn: asyncpg.Connection = Depends(get_db),
 ):
     """Récupérer les événements de la timeline."""
@@ -61,7 +66,7 @@ async def get_timeline(
 
     events = []
     for row in rows:
-        event = dict(row)
+        event = localize(dict(row), lang, ["title", "description"])
         event["tags"] = list(event["tags"]) if event["tags"] else []
         if isinstance(event.get("metrics"), str):
             event["metrics"] = json.loads(event["metrics"]) if event["metrics"] else {}
@@ -101,6 +106,7 @@ async def create_timeline_event(event: dict, conn: asyncpg.Connection = Depends(
 async def get_skills(
     category: str | None = Query(None, description="Filter by category"),
     primary_only: bool = Query(False, description="Show only primary skills"),
+    lang: str = Query("fr"),
     conn: asyncpg.Connection = Depends(get_db),
 ):
     """Récupérer les compétences."""
@@ -115,7 +121,7 @@ async def get_skills(
     query += " ORDER BY category, proficiency_level DESC, name ASC"
 
     rows = await conn.fetch(query, *params)
-    return [Skill(**dict(row)) for row in rows]
+    return [Skill(**localize(dict(row), lang, ["subcategory", "name"])) for row in rows]
 
 
 @router.get("/api/skills/grouped")

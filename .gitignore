@@ -55,3 +55,6 @@ logs/
 
 # Image source déposée à la racine (la version servie est dans public/)
 /179094452.jpg
+
+# Mais on versionne les CV servis par le portfolio (assets publics)
+!dashboard/frontend/public/*.pdf

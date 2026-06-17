@@ -1,11 +1,14 @@
 import { useMemo, useState } from "react";
 import { ArrowUpRight, Star, GitFork } from "lucide-react";
 import { SectionHead } from "./Timeline";
+import { useLang, translateCategory } from "../../i18n.jsx";
+
+const ALL = "__all__";
 
 export default function Projects({ projects = [] }) {
-  const [active, setActive] = useState("Tous");
+  const { t, lang } = useLang();
+  const [active, setActive] = useState(ALL);
 
-  // Catégories réellement présentes, dans un ordre stable.
   const categories = useMemo(() => {
     const order = [
       "IA Générative / LLM",
@@ -16,19 +19,18 @@ export default function Projects({ projects = [] }) {
       "Autre",
     ];
     const present = new Set(projects.map((p) => p.category).filter(Boolean));
-    return ["Tous", ...order.filter((c) => present.has(c))];
+    return [ALL, ...order.filter((c) => present.has(c))];
   }, [projects]);
 
-  const filtered =
-    active === "Tous" ? projects : projects.filter((p) => p.category === active);
+  const filtered = active === ALL ? projects : projects.filter((p) => p.category === active);
 
   return (
     <section id="projets" className="section">
       <div className="container-page">
         <SectionHead
-          overline="Projets"
-          title="Sélection de projets"
-          description="Issus de mes dépôts GitHub, regroupés par domaine. Filtrez selon ce qui vous intéresse."
+          overline={t("projects.overline")}
+          title={t("projects.title")}
+          description={t("projects.description")}
         />
 
         {categories.length > 2 && (
@@ -43,7 +45,7 @@ export default function Projects({ projects = [] }) {
                     : "rounded-full border border-line px-3.5 py-1.5 text-sm font-medium text-body transition-colors hover:border-accent hover:text-accent"
                 }
               >
-                {c}
+                {c === ALL ? t("projects.all") : translateCategory(c, lang)}
               </button>
             ))}
           </div>
@@ -51,12 +53,12 @@ export default function Projects({ projects = [] }) {
 
         {filtered.length === 0 ? (
           <div className="mt-10 rounded-xl border border-dashed border-line p-10 text-center text-sm text-muted">
-            Projets en cours de curation.
+            {t("projects.empty")}
           </div>
         ) : (
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((p) => (
-              <ProjectCard key={p.id} project={p} />
+              <ProjectCard key={p.id} project={p} lang={lang} />
             ))}
           </div>
         )}
@@ -65,7 +67,7 @@ export default function Projects({ projects = [] }) {
   );
 }
 
-function ProjectCard({ project: p }) {
+function ProjectCard({ project: p, lang }) {
   const techs = (p.stack?.length ? p.stack : p.tags || []).slice(0, 4);
 
   return (
@@ -86,7 +88,9 @@ function ProjectCard({ project: p }) {
       </div>
 
       {p.category && (
-        <span className="mt-1 text-xs font-medium text-accent">{p.category}</span>
+        <span className="mt-1 text-xs font-medium text-accent">
+          {translateCategory(p.category, lang)}
+        </span>
       )}
 
       {p.short_pitch && (
@@ -97,9 +101,9 @@ function ProjectCard({ project: p }) {
 
       {techs.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {techs.map((t, i) => (
+          {techs.map((tech, i) => (
             <span key={i} className="chip">
-              {t}
+              {tech}
             </span>
           ))}
         </div>

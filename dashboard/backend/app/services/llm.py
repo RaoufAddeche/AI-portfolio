@@ -40,7 +40,8 @@ async def summarize_repo(name: str, description: str, readme: str, language: str
         f"Langage principal: {language or 'inconnu'}\n"
         f"Description: {description or '(aucune)'}\n\n"
         f"README (tronqué):\n{readme[:6000]}\n\n"
-        "Produis un JSON avec les clés exactes: title, short_pitch (1 phrase CV), "
+        "Produis un JSON avec les clés exactes: title, short_pitch (1 phrase CV en français), "
+        "short_pitch_en (la même phrase en anglais), "
         "long_desc (3-5 phrases structurées), tags (liste de mots-clés), "
         "stack (liste de technos), ai_confidence_score (entier 0-100), "
         f"category (UNE valeur parmi exactement: {CATEGORIES})."
@@ -58,22 +59,24 @@ async def summarize_repo(name: str, description: str, readme: str, language: str
     data.setdefault("tags", [])
     data.setdefault("stack", [])
     data.setdefault("ai_confidence_score", 50)
+    data.setdefault("short_pitch_en", "")
     if data.get("category") not in CATEGORIES:
         data["category"] = "Autre"
     return data
 
 
-async def answer_question(question: str, context: str) -> str:
+async def answer_question(question: str, context: str, lang: str = "fr") -> str:
     """Chatbot du portfolio : répond uniquement à partir du contexte fourni."""
     settings = get_settings()
+    language = "anglais" if lang == "en" else "français"
     system = (
         "Tu es l'assistant du portfolio de Raouf Addeche, ingénieur IA & data. "
         "Tu réponds aux visiteurs (recruteurs, clients) à propos de son parcours, ses "
-        "compétences et ses projets, en français, sur un ton professionnel et chaleureux, "
-        "à la première personne du pluriel ou en parlant de Raouf à la 3e personne. "
+        f"compétences et ses projets, en {language}, sur un ton professionnel et chaleureux. "
         "RÈGLE STRICTE : réponds UNIQUEMENT à partir des informations du CONTEXTE ci-dessous. "
         "Si l'information n'y est pas, dis simplement que tu ne disposes pas de cette "
-        "information et invite à le contacter directement. Sois concis (2-4 phrases).\n\n"
+        f"information et invite à le contacter directement. Réponds en {language}, "
+        "de façon concise (2-4 phrases).\n\n"
         f"=== CONTEXTE ===\n{context}"
     )
     resp = await _client().chat.completions.create(

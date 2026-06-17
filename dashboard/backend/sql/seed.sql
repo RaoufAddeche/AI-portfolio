@@ -186,3 +186,125 @@ VALUES
   ARRAY['IA Agentique','Developer Tooling','MCP'],
   2
 );
+
+-- =====================================================================
+-- TRADUCTIONS ANGLAISES (colonnes _en) — repli FR si absent côté API
+-- =====================================================================
+
+-- Profil
+UPDATE profile SET
+  title_en = 'AI & Data Engineer · GenAI Engineer',
+  bio_en = 'Passionate about applied AI and data, I build useful solutions designed around '
+    'real-world usage and business needs. My background in client relations gave me a strong '
+    'grasp of the field, which I now combine with technical skills in generative AI, LLMs and '
+    'data engineering.',
+  hero_pitch_en = 'AI Developer at Midas / Mobivia, I build real-time AI voicebots, LLM-based '
+    'workflows and developer-assistance tools, deployed in production on AWS.',
+  availability_en = 'Available across France & internationally'
+WHERE id = 1;
+
+-- Parcours
+UPDATE timeline_events SET
+  title_en = 'Higher Diploma in Sales & Client Relations',
+  description_en = 'Efficom Lille. Fundamentals of commercial relationships and client support.'
+WHERE title = 'BTS Négociation & Relation Client';
+
+UPDATE timeline_events SET
+  title_en = 'Client Relations & Business Support',
+  description_en = 'Field experience in B2B/B2C: needs analysis, business support and '
+    'collaboration with diverse operational teams (Onenergy/Sowee–EDF, Orange, Engie, Regicom). '
+    'Strong sensitivity to real-world usage and field challenges.'
+WHERE title = 'Relation client & accompagnement métier';
+
+UPDATE timeline_events SET
+  title_en = 'Data / AI Developer — Pre-qualification',
+  description_en = 'Simplon Hauts-de-France. Upskilling and transition into Data/AI development.'
+WHERE title = 'Préqualification Développeur Data / IA';
+
+UPDATE timeline_events SET
+  title_en = 'Microsoft School — Data / AI Developer',
+  description_en = 'Simplon Hauts-de-France. Data Science, Machine Learning, generative AI and '
+    'AI application development.'
+WHERE title = 'École Microsoft — Développeur Data / IA';
+
+UPDATE timeline_events SET
+  title_en = 'AI Developer — Midas / Mobivia',
+  description_en = 'Built a real-time AI voicebot (Deepgram, Claude via AWS Bedrock, Cartesia, '
+    'Twilio, AWS ECS/DynamoDB) deployed in production across pilot centers. Developer-assistance '
+    'tools, automated pre-merge quality control, retro-documentation agents and an internal MCP '
+    'connected to business APIs.'
+WHERE title = 'Développeur IA — Midas / Mobivia';
+
+UPDATE timeline_events SET
+  title_en = 'Microsoft Azure Certifications',
+  description_en = 'Azure Fundamentals (AZ-900) and Azure AI Fundamentals (AI-900).'
+WHERE title = 'Certifications Microsoft Azure';
+
+-- Compétences (libellés de sous-catégories)
+UPDATE skills SET subcategory_en = 'AI & Machine Learning'   WHERE subcategory = 'IA & Machine Learning';
+UPDATE skills SET subcategory_en = 'Backend & APIs'          WHERE subcategory = 'Backend & APIs';
+UPDATE skills SET subcategory_en = 'Cloud & DevOps'          WHERE subcategory = 'Cloud & DevOps';
+UPDATE skills SET subcategory_en = 'Conversational AI'       WHERE subcategory = 'IA conversationnelle';
+UPDATE skills SET subcategory_en = 'Data & Databases'        WHERE subcategory = 'Data & Bases de données';
+UPDATE skills SET subcategory_en = 'Frontend & Interfaces'   WHERE subcategory = 'Frontend & Interfaces';
+UPDATE skills SET subcategory_en = 'Soft Skills'             WHERE subcategory = 'Atouts métier';
+
+-- Noms des compétences non techniques (les technos restent identiques -> repli FR)
+UPDATE skills SET name_en = 'Technical communication'  WHERE name = 'Vulgarisation technique';
+UPDATE skills SET name_en = 'Business acumen'          WHERE name = 'Compréhension métier';
+UPDATE skills SET name_en = 'Autonomy & adaptability'  WHERE name = 'Autonomie & adaptabilité';
+UPDATE skills SET name_en = 'AI watch & innovation'    WHERE name = 'Veille IA & innovation';
+
+-- Études de cas
+UPDATE case_studies SET
+  title_en = 'Real-time AI voicebot',
+  subtitle_en = 'Automated handling of missed calls for Midas centers',
+  summary_en = 'An AI voice agent that answers missed calls at the centers, understands the '
+    'request and qualifies the customer in real time — deployed in production across pilot centers.',
+  problem_en = 'During peak hours and outside opening times, many customer calls go unanswered '
+    'at Midas centers: lost appointments and frustration. The challenge: never leave a call '
+    'unhandled, without overloading the teams.',
+  approach_en = 'Designed a real-time AI voice agent plugged into telephony: it answers the '
+    'missed call, transcribes speech, reasons about the request, qualifies the customer and '
+    'captures intent (booking, information), then replies with a natural voice — all at '
+    'near real-time latency.',
+  architecture_en = '[
+    {"step": "Incoming call", "tech": "Twilio"},
+    {"step": "Speech-to-Text", "tech": "Deepgram"},
+    {"step": "Reasoning & dialogue", "tech": "Claude Sonnet · AWS Bedrock"},
+    {"step": "Text-to-Speech", "tech": "Cartesia"},
+    {"step": "Reply to caller", "tech": "Twilio"}
+   ]'::jsonb,
+  results_en = ARRAY[
+    'Deployed in production across pilot centers',
+    'Automated customer qualification of missed calls',
+    'Low-latency real-time architecture (STT → LLM → TTS)',
+    'Targeting nationwide and European industrialization'
+  ]
+WHERE slug = 'voicebot-ia-temps-reel';
+
+UPDATE case_studies SET
+  title_en = 'Internal AI tools for developers',
+  subtitle_en = 'Making development on a legacy codebase faster and more reliable',
+  summary_en = 'An ecosystem of AI tools for dev teams: legacy code retro-documentation, '
+    'automated pre-merge quality control and an internal MCP connected to business APIs.',
+  problem_en = 'A poorly documented legacy codebase (VB.NET), an ongoing migration to '
+    'Angular/C# and inconsistent quality before merge requests: friction and risk for the '
+    'development teams.',
+  approach_en = 'Built AI tools serving developers: retro-documentation agents that analyze '
+    'undocumented legacy code, automated quality control before merge (conventions, gaps, '
+    'newly introduced anomalies), prompt-engineering workflows for GitHub Copilot / Claude '
+    'Code, and an internal MCP centralizing AI usage over business APIs.',
+  architecture_en = '[
+    {"step": "Undocumented legacy code", "tech": "VB.NET"},
+    {"step": "Retro-documentation agents", "tech": "LLM"},
+    {"step": "Pre-merge quality control", "tech": "Automated analysis"},
+    {"step": "Centralized access to business APIs", "tech": "Internal MCP"}
+   ]'::jsonb,
+  results_en = ARRAY[
+    'Automatic detection of missing conventions and anomalies before merge',
+    'Automatic documentation of undocumented legacy code',
+    'Support for the VB.NET → Angular/C# migration',
+    'AI usage centralized and enriched via an internal MCP'
+  ]
+WHERE slug = 'outils-ia-developpeurs';

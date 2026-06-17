@@ -1,5 +1,6 @@
 import { Briefcase, GraduationCap, Building2, Award, Dot } from "lucide-react";
 import Reveal from "../Reveal";
+import { useLang } from "../../i18n.jsx";
 
 const CAT = {
   commercial: { Icon: Briefcase },
@@ -11,21 +12,16 @@ const CAT = {
 
 // On NE mélange PAS : expérience pro / formation / certifications sont distinctes.
 const GROUPS = [
-  { title: "Expérience professionnelle", cats: ["alternance", "commercial"] },
-  { title: "Formation", cats: ["formation"] },
-  { title: "Certifications", cats: ["certification"] },
+  { id: "experience", key: "timeline.experience", cats: ["alternance", "commercial"] },
+  { id: "formation", key: "timeline.formation", cats: ["formation"] },
+  { id: "certifications", key: "timeline.certifications", cats: ["certification"] },
 ];
 
-const fmt = (d) =>
-  d ? new Date(d).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : null;
-
-function period(ev) {
-  const start = fmt(ev.date);
-  const end = ev.end_date ? fmt(ev.end_date) : "aujourd’hui";
-  return `${start} — ${end}`;
-}
+const fmt = (d, lang) =>
+  d ? new Date(d).toLocaleDateString(lang === "en" ? "en-GB" : "fr-FR", { month: "short", year: "numeric" }) : null;
 
 export default function Timeline({ events = [] }) {
+  const { t, lang } = useLang();
   if (!events.length) return null;
 
   const byGroup = GROUPS.map((g) => ({
@@ -35,23 +31,23 @@ export default function Timeline({ events = [] }) {
       .sort((a, b) => new Date(b.date) - new Date(a.date)),
   })).filter((g) => g.items.length > 0);
 
-  const experience = byGroup.filter((g) => g.title === "Expérience professionnelle");
-  const rest = byGroup.filter((g) => g.title !== "Expérience professionnelle");
+  const experience = byGroup.filter((g) => g.id === "experience");
+  const rest = byGroup.filter((g) => g.id !== "experience");
 
   return (
     <section id="parcours" className="section bg-surface-2">
       <div className="container-page">
-        <SectionHead overline="Parcours" title="De la relation client à l’ingénierie IA" />
+        <SectionHead overline={t("timeline.overline")} title={t("timeline.title")} />
 
         <div className="mt-12 grid gap-12 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-10">
             {experience.map((g) => (
-              <Group key={g.title} group={g} />
+              <Group key={g.id} group={g} t={t} lang={lang} />
             ))}
           </div>
           <div className="space-y-10">
             {rest.map((g) => (
-              <Group key={g.title} group={g} />
+              <Group key={g.id} group={g} t={t} lang={lang} />
             ))}
           </div>
         </div>
@@ -60,21 +56,23 @@ export default function Timeline({ events = [] }) {
   );
 }
 
-function Group({ group }) {
+function Group({ group, t, lang }) {
+  const today = t("timeline.today");
   return (
     <Reveal>
       <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted">
-        {group.title}
+        {t(group.key)}
       </h3>
       <ol className="relative mt-5 border-l border-line">
         {group.items.map((ev) => {
           const { Icon } = CAT[ev.category] || CAT.project;
+          const span = `${fmt(ev.date, lang)} — ${ev.end_date ? fmt(ev.end_date, lang) : today}`;
           return (
             <li key={ev.id} className="relative ml-6 pb-8 last:pb-0">
               <span className="absolute -left-[33px] grid h-8 w-8 place-items-center rounded-full border border-line bg-surface text-accent">
                 <Icon className="h-4 w-4" strokeWidth={1.75} />
               </span>
-              <span className="text-xs text-muted">{period(ev)}</span>
+              <span className="text-xs text-muted">{span}</span>
               <h4 className="mt-1 text-base font-semibold text-ink">{ev.title}</h4>
               {ev.description && (
                 <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-body">
@@ -83,9 +81,9 @@ function Group({ group }) {
               )}
               {ev.tags?.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {ev.tags.map((t, i) => (
+                  {ev.tags.map((tag, i) => (
                     <span key={i} className="chip">
-                      {t}
+                      {tag}
                     </span>
                   ))}
                 </div>

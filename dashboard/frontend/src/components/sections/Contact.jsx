@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Github, Linkedin, Mail, MapPin, Send, Check } from "lucide-react";
+import { useLang } from "../../i18n.jsx";
 
 const ICONS = { github: Github, linkedin: Linkedin, email: Mail };
 
 export default function Contact({ profile, social = [] }) {
+  const { t } = useLang();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [status, setStatus] = useState("idle"); // idle | sending | sent | error
 
@@ -31,11 +33,10 @@ export default function Contact({ profile, social = [] }) {
       <div className="container-page grid gap-12 lg:grid-cols-2">
         {/* Colonne gauche */}
         <div>
-          <p className="overline">Contact</p>
-          <h2 className="mt-3 text-3xl font-bold text-ink md:text-4xl">Travaillons ensemble</h2>
+          <p className="overline">{t("contact.overline")}</p>
+          <h2 className="mt-3 text-3xl font-bold text-ink md:text-4xl">{t("contact.title")}</h2>
           <p className="mt-4 max-w-md text-base leading-relaxed text-body">
-            Une opportunité, une mission ou simplement envie d’échanger sur l’IA et la data ?
-            Écrivez-moi, je réponds rapidement.
+            {t("contact.description")}
           </p>
 
           <div className="mt-8 space-y-3 text-sm">
@@ -81,11 +82,11 @@ export default function Contact({ profile, social = [] }) {
         <form onSubmit={submit} className="card space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-ink">Nom</span>
+              <span className="mb-1.5 block text-sm font-medium text-ink">{t("contact.name")}</span>
               <input className="field" required value={form.name} onChange={update("name")} />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-ink">Email</span>
+              <span className="mb-1.5 block text-sm font-medium text-ink">{t("contact.email")}</span>
               <input
                 type="email"
                 className="field"
@@ -96,11 +97,11 @@ export default function Contact({ profile, social = [] }) {
             </label>
           </div>
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-ink">Sujet</span>
+            <span className="mb-1.5 block text-sm font-medium text-ink">{t("contact.subject")}</span>
             <input className="field" value={form.subject} onChange={update("subject")} />
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-ink">Message</span>
+            <span className="mb-1.5 block text-sm font-medium text-ink">{t("contact.message")}</span>
             <textarea
               className="field min-h-[120px] resize-y"
               required
@@ -113,17 +114,17 @@ export default function Contact({ profile, social = [] }) {
             <button type="submit" className="btn-primary" disabled={status === "sending"}>
               {status === "sent" ? (
                 <>
-                  <Check className="h-4 w-4" strokeWidth={2} /> Envoyé
+                  <Check className="h-4 w-4" strokeWidth={2} /> {t("contact.sent")}
                 </>
               ) : (
                 <>
                   <Send className="h-4 w-4" strokeWidth={1.75} />
-                  {status === "sending" ? "Envoi…" : "Envoyer"}
+                  {status === "sending" ? t("contact.sending") : t("contact.send")}
                 </>
               )}
             </button>
             {status === "error" && (
-              <span className="text-sm text-red-600">Une erreur est survenue, réessayez.</span>
+              <span className="text-sm text-red-600">{t("contact.error")}</span>
             )}
           </div>
         </form>

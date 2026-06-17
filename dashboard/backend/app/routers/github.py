@@ -160,11 +160,12 @@ async def sync_repos(
                 INSERT INTO portfolio_items
                     (repo, title, short_pitch, long_desc, tags, stack,
                      github_url, github_stars, github_forks, github_language,
-                     last_commit_date, ai_confidence_score, category, status)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'draft')
+                     last_commit_date, ai_confidence_score, category, short_pitch_en, status)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'draft')
                 ON CONFLICT (repo) DO UPDATE SET
                     title = EXCLUDED.title,
                     short_pitch = EXCLUDED.short_pitch,
+                    short_pitch_en = EXCLUDED.short_pitch_en,
                     long_desc = EXCLUDED.long_desc,
                     tags = EXCLUDED.tags,
                     stack = EXCLUDED.stack,
@@ -190,6 +191,7 @@ async def sync_repos(
                 pushed,
                 int(summary.get("ai_confidence_score", 50)),
                 category,
+                summary.get("short_pitch_en", ""),
             )
             await conn.execute(
                 "INSERT INTO portfolio_events (source, repo, action, payload, status) "

@@ -1,9 +1,10 @@
-import { ArrowRight, Github, MapPin, Briefcase, GraduationCap } from "lucide-react";
+import { ArrowRight, Download, MapPin, Briefcase, GraduationCap } from "lucide-react";
+import { useLang } from "../../i18n.jsx";
 
-export default function Hero({ profile, social = [], loading }) {
+export default function Hero({ profile, loading }) {
+  const { t, lang } = useLang();
   if (loading || !profile) return <HeroSkeleton />;
 
-  const github = social.find((s) => s.platform === "github");
   const initials = profile.full_name
     .split(" ")
     .map((n) => n[0])
@@ -35,32 +36,25 @@ export default function Hero({ profile, social = [], loading }) {
             )}
             <li className="inline-flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-accent" strokeWidth={1.75} />
-              Développeur IA — Midas / Mobivia
+              {t("hero.fact_role")}
             </li>
             <li className="inline-flex items-center gap-2">
               <GraduationCap className="h-4 w-4 text-accent" strokeWidth={1.75} />
-              Simplon × Microsoft (2024–2026)
+              {t("hero.fact_school")}
             </li>
           </ul>
 
           {/* CTA */}
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <a href="#projets" className="btn-primary">
-              Voir mes projets <ArrowRight className="h-4 w-4" strokeWidth={2} />
+              {t("hero.cta_projects")} <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </a>
-            <a href="#contact" className="btn-outline">
-              Me contacter
+            <a href={`/cv-raouf-addeche-${lang}.pdf`} download className="btn-outline">
+              <Download className="h-4 w-4" strokeWidth={1.75} /> {t("hero.cta_cv")}
             </a>
-            {github && (
-              <a
-                href={github.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-ghost"
-              >
-                <Github className="h-4 w-4" strokeWidth={1.75} /> GitHub
-              </a>
-            )}
+            <a href="#contact" className="btn-ghost">
+              {t("hero.cta_contact")}
+            </a>
           </div>
         </div>
 

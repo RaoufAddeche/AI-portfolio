@@ -1,6 +1,8 @@
 import { SectionHead } from "./Timeline";
+import { useLang } from "../../i18n.jsx";
 
 export default function Skills({ skills = [] }) {
+  const { t } = useLang();
   if (!skills.length) return null;
 
   // Regroupe par sous-catégorie en conservant l'ordre d'arrivée.
@@ -19,9 +21,9 @@ export default function Skills({ skills = [] }) {
     <section id="competences" className="section bg-surface-2">
       <div className="container-page">
         <SectionHead
-          overline="Compétences"
-          title="Stack & savoir-faire"
-          description="Outils et technologies que j’utilise au quotidien, du prototypage à la mise en production."
+          overline={t("skills.overline")}
+          title={t("skills.title")}
+          description={t("skills.description")}
         />
 
         <div className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
