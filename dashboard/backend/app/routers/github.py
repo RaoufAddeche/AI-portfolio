@@ -13,7 +13,7 @@ Optimisations :
 from datetime import datetime
 
 import asyncpg
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
 from ..config import get_settings
 from ..db import get_db
@@ -95,6 +95,7 @@ async def sync_repos(
     include_forks: bool = Query(False, description="Inclure les forks"),
     limit: int = Query(30, ge=1, le=100, description="Nombre max de repos à examiner"),
     force: bool = Query(False, description="Forcer le re-résumé même si inchangé"),
+    x_sync_token: str | None = Header(None),
     conn: asyncpg.Connection = Depends(get_db),
 ):
     """Synchroniser les repos : ne résume (LLM) que ceux modifiés depuis la dernière fois.
@@ -102,6 +103,8 @@ async def sync_repos(
     Les items créés sont en statut 'draft' (validation humaine avant publication).
     """
     settings = get_settings()
+    if settings.sync_token and x_sync_token != settings.sync_token:
+        raise HTTPException(status_code=401, detail="Token de synchronisation invalide")
     if not settings.openai_api_key:
         raise HTTPException(status_code=400, detail="OPENAI_API_KEY non configuré")
 

@@ -39,6 +39,9 @@ services:
       - GITHUB_USERNAME=${GITHUB_USERNAME}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL}
+      - SYNC_TOKEN=${SYNC_TOKEN:-}
+      - CHAT_RATE_PER_MINUTE=${CHAT_RATE_PER_MINUTE:-6}
+      - CHAT_DAILY_LIMIT=${CHAT_DAILY_LIMIT:-300}
     ports:
       - "8000:8000"
     depends_on:

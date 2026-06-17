@@ -1,0 +1,28 @@
+name: Sync portfolio
+
+# Déclenche la synchro des repos GitHub -> portfolio.
+# Grâce à la détection de changement côté API, un run sans nouveauté ne coûte rien.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # tous les lundis à 06:00 UTC
+  workflow_dispatch: {} # bouton "Run workflow" manuel
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déclencher /api/github/sync
+        env:
+          API_URL: ${{ secrets.PORTFOLIO_API_URL }} # ex: https://api.ton-domaine.dev
+          SYNC_TOKEN: ${{ secrets.PORTFOLIO_SYNC_TOKEN }}
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "::error::Secret PORTFOLIO_API_URL manquant (l'API doit être déployée et publique)."
+            exit 1
+          fi
+          code=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+            -X POST "$API_URL/api/github/sync?limit=50" \
+            -H "X-Sync-Token: $SYNC_TOKEN")
+          echo "HTTP $code"
+          cat /tmp/resp.json
+          test "$code" = "200"

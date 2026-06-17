@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     chat_rate_per_minute: int = 6     # messages max par IP et par minute
     chat_daily_limit: int = 300       # appels LLM max par jour (toutes IP confondues)
 
+    # Protège POST /api/github/sync quand l'API est exposée publiquement.
+    # Si défini, l'appel exige l'en-tête X-Sync-Token. Vide = pas de contrôle (dev local).
+    sync_token: str | None = None
+
     @property
     def dsn(self) -> str:
         return (
