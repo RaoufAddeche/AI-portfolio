@@ -35,7 +35,7 @@ async def get_portfolio_items(
                last_commit_date, ai_confidence_score, status, created_at,
                updated_at, human_reviewed, business_metrics, technical_metrics,
                achievements, complexity_score, team_size, project_duration_months,
-               demo_url, live_url
+               demo_url, live_url, category
         FROM portfolio_items
         WHERE 1=1
     """

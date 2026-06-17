@@ -92,8 +92,8 @@ async def sync_repos(
                 INSERT INTO portfolio_items
                     (repo, title, short_pitch, long_desc, tags, stack,
                      github_url, github_stars, github_forks, github_language,
-                     ai_confidence_score, status)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'draft')
+                     ai_confidence_score, category, status)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'draft')
                 ON CONFLICT (repo) DO UPDATE SET
                     title = EXCLUDED.title,
                     short_pitch = EXCLUDED.short_pitch,
@@ -104,6 +104,7 @@ async def sync_repos(
                     github_forks = EXCLUDED.github_forks,
                     github_language = EXCLUDED.github_language,
                     ai_confidence_score = EXCLUDED.ai_confidence_score,
+                    category = EXCLUDED.category,
                     updated_at = NOW()
                 WHERE portfolio_items.human_reviewed = FALSE
                 """,
@@ -118,6 +119,7 @@ async def sync_repos(
                 r.get("forks_count", 0),
                 r.get("language"),
                 int(summary.get("ai_confidence_score", 50)),
+                summary.get("category", "Autre"),
             )
             await conn.execute(
                 """

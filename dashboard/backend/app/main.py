@@ -8,6 +8,8 @@ from .config import get_settings
 from .db import close_pool, init_pool
 from .routers import (
     analytics,
+    case_studies,
+    chat,
     exports,
     github,
     modes,
@@ -65,6 +67,8 @@ def create_app() -> FastAPI:
         modes,
         analytics,
         github,
+        chat,
+        case_studies,
     ):
         app.include_router(module.router)
 

@@ -4,160 +4,71 @@
 
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem; /* compense la navbar sticky lors des ancres */
   }
 
   body {
-    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300;
+    @apply bg-white text-body font-sans antialiased;
+    font-feature-settings: "cv05", "ss01";
+  }
+
+  h1, h2, h3, h4 {
+    @apply text-ink font-semibold tracking-tightish;
+  }
+
+  ::selection {
+    @apply bg-accent text-white;
   }
 }
 
 @layer components {
+  /* Conteneur de page cohérent */
+  .container-page {
+    @apply mx-auto w-full max-w-content px-6 lg:px-8;
+  }
+
+  /* Rythme vertical des sections */
+  .section {
+    @apply py-20 md:py-28 scroll-mt-20;
+  }
+
+  /* Sur-titre discret au-dessus des titres de section */
+  .overline {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-accent;
+  }
+
+  /* Boutons : sobres, sans effets clinquants */
   .btn {
-    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm transition-all duration-200 transform hover:scale-105 active:scale-95;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5
+           text-sm font-medium transition-colors duration-150
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40;
   }
-
   .btn-primary {
-    @apply btn bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 relative overflow-hidden;
+    @apply btn bg-accent text-white hover:bg-accent-hover;
   }
-
-  .btn-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
+  .btn-outline {
+    @apply btn border border-line text-ink hover:border-accent hover:text-accent;
   }
-
-  .btn-primary:hover::before {
-    left: 100%;
-  }
-
-  .btn-secondary {
-    @apply btn bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 relative overflow-hidden;
-  }
-
-  .btn-secondary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(59,130,246,0.1), transparent);
-    transition: left 0.5s;
-  }
-
-  .btn-secondary:hover::before {
-    left: 100%;
-  }
-
   .btn-ghost {
-    @apply btn bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent;
+    @apply btn text-body hover:text-ink;
   }
 
-  .btn-success {
-    @apply btn bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800;
-  }
-
-  .btn-warning {
-    @apply btn bg-yellow-600 dark:bg-yellow-500 text-white hover:bg-yellow-700 dark:hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-800;
-  }
-
-  .btn-danger {
-    @apply btn bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800;
-  }
-
+  /* Carte neutre, bordure fine, ombre minimale */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-md dark:hover:shadow-xl;
+    @apply rounded-xl border border-line bg-white p-6 transition-colors duration-150 hover:border-accent/40;
   }
 
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200;
+  /* Étiquette discrète (techno, tag) */
+  .chip {
+    @apply inline-flex items-center rounded-md border border-line bg-slate-50 px-2.5 py-1
+           text-xs font-medium text-slate-600;
   }
 
-  .badge-green {
-    @apply badge bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200;
-  }
-
-  .badge-yellow {
-    @apply badge bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200;
-  }
-
-  .badge-blue {
-    @apply badge bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200;
-  }
-
-  .badge-gray {
-    @apply badge bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200;
-  }
-
-  .badge-purple {
-    @apply badge bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200;
-  }
-
-  .badge-red {
-    @apply badge bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200;
-  }
-
-  /* Form Elements */
-  .form-input {
-    @apply border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200;
-  }
-
-  .form-select {
-    @apply form-input appearance-none cursor-pointer;
-  }
-
-  /* Theme Toggle */
-  .theme-toggle {
-    @apply p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 transform hover:scale-105 active:scale-95;
-  }
-
-  /* Header */
-  .header-bg {
-    @apply bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-300;
-  }
-
-  /* Content backgrounds */
-  .content-bg {
-    @apply bg-gray-50 dark:bg-gray-900 transition-colors duration-300;
-  }
-
-  /* Stats card special styling */
-  .stats-card {
-    @apply card p-6 hover:shadow-lg dark:hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300;
-  }
-
-  /* Animations */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-fade-in-up {
-    animation: fadeInUp 0.5s ease-out;
-  }
-
-  @keyframes pulse-soft {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.8;
-    }
-  }
-
-  .animate-pulse-soft {
-    animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  /* Champs de formulaire */
+  .field {
+    @apply w-full rounded-md border border-line bg-white px-3.5 py-2.5 text-sm text-ink
+           placeholder:text-slate-400 focus:border-accent focus:outline-none
+           focus:ring-2 focus:ring-accent/20;
   }
 }

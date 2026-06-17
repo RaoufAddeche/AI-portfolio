@@ -46,6 +46,7 @@ class PortfolioItem(BaseModel):
     project_duration_months: int | None = None
     demo_url: str | None = None
     live_url: str | None = None
+    category: str | None = None
 
 
 class PortfolioStats(BaseModel):
@@ -213,6 +214,26 @@ class GitHubStats(BaseModel):
     last_fetched_at: datetime
     created_at: datetime
     updated_at: datetime
+
+
+class CaseStudy(BaseModel):
+    id: int
+    slug: str
+    title: str
+    subtitle: str | None = None
+    company: str | None = None
+    role: str | None = None
+    period: str | None = None
+    summary: str
+    problem: str | None = None
+    approach: str | None = None
+    architecture: list[dict] = []
+    stack: list[str] = []
+    results: list[str] = []
+    tags: list[str] = []
+    is_published: bool
+    display_order: int
+    created_at: datetime
 
 
 class ContactSubmission(BaseModel):
