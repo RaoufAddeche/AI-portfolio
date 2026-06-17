@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
 
+    # Garde-fous du chatbot (anti-spam / protection du budget LLM)
+    chat_rate_per_minute: int = 6     # messages max par IP et par minute
+    chat_daily_limit: int = 300       # appels LLM max par jour (toutes IP confondues)
+
     @property
     def dsn(self) -> str:
         return (
