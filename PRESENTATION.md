@@ -189,16 +189,12 @@ GitHub → n8n → OpenAI → PostgreSQL → FastAPI → React
 
 ```env
 # PostgreSQL
-POSTGRES_USER=admin_user_db
-POSTGRES_PASSWORD=O2ZkUw6Qjh5HCJT97mNWFgtzDaPv1LeA
-POSTGRES_DB=n8n_database
+POSTGRES_USER=portfolio_admin
+POSTGRES_PASSWORD=********          # secret, jamais commité (voir .env.example)
+POSTGRES_DB=portfolio
 
-# n8n
-N8N_BASIC_AUTH_USER=n8n_admin_user
-N8N_BASIC_AUTH_PASSWORD=O2ZkUw6Qjh5HCJT97mNWFgtzDaPv1LeA
-
-# OpenAI
-GPT_API_KEY=sk-proj-...
+# OpenAI (résumés de projets à la demande)
+OPENAI_API_KEY=sk-...               # secret, jamais commité
 
 # GitHub
 GITHUB_TOKEN=ghp_YOUR_GITHUB_TOKEN_HERE

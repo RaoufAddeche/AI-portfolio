@@ -1,25 +1,24 @@
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1
+# Image officielle uv (uv + Python figés, build reproductible)
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
-# Installer les dépendances système
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH"
 
-# Copier les requirements
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# 1) Couche dépendances (cache tant que le lock ne change pas)
+COPY pyproject.toml uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
 
-# Copier le code
+# 2) Code applicatif
 COPY . .
 
-# Exposer le port
 EXPOSE 8000
 
-# Variables d'environnement
-ENV PYTHONPATH=/app
-ENV PYTHONUNBUFFERED=1
-
-# Commande de démarrage
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Par défaut : applique les migrations puis lance l'API (pas de --reload en prod).
+# docker-compose surcharge cette commande ; conservée pour un run autonome.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

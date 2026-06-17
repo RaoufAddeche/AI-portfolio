@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an automated portfolio assistant system built with n8n, PostgreSQL, and Ollama. The system automatically tracks GitHub repositories, summarizes projects using LLMs, and maintains an up-to-date portfolio with human validation.
+This is an automated portfolio assistant system built with **FastAPI, PostgreSQL, and a React/Vite frontend**. It tracks GitHub repositories, summarizes projects using an LLM API (OpenAI, on-demand), and maintains an up-to-date portfolio with human validation. (Originally built on n8n + Ollama for a school brief — since migrated to a single Python stack.)
 
 **User Profile**: Data Scientist in reconversion (ex-Commercial), 2nd year of alternance, 28 years old.
 
@@ -16,12 +16,16 @@ This is an automated portfolio assistant system built with n8n, PostgreSQL, and 
 
 ## Architecture
 
-The project uses a Docker-based stack:
-- **n8n**: Workflow automation engine (port 5678)
-- **PostgreSQL**: Database for portfolio data and audit logs (port 5432)
-- **Ollama**: Local LLM inference server (port 11434)
-- **MCP Sidecar**: HTTP API bridge for GitHub integration (port 8080)
-- **Dashboard**: React-based portfolio dashboard (planned)
+Docker-based stack — **3 services** (volontairement réduit depuis le brief école) :
+- **PostgreSQL 15**: portfolio data + audit log (port 5432)
+- **Backend FastAPI**: API Python, package `app/`, pool asyncpg (port 8000)
+- **Frontend React/Vite**: dashboard portfolio (port 3000)
+
+> ⚠️ **Retiré** (ne plus référencer) : n8n, Ollama, le sidecar MCP Node/TypeScript.
+> - L'automatisation n8n → endpoint `POST /api/github/sync` (déclenché à la demande / cron VPS / GitHub Action).
+> - Ollama (LLM local) → API OpenAI à la demande via `app/services/llm.py`.
+> - Sidecar GitHub Node → `app/services/github.py`.
+> - Les migrations sont gérées par **Alembic** ; le schéma vit dans `dashboard/backend/sql/schema.sql`.
 
 ## Common Commands
 
@@ -43,66 +47,60 @@ docker compose ps
 ### Database Operations
 ```bash
 # Connect to PostgreSQL
-docker exec -it postgresql psql -U admin_user_db -d n8n_database
+docker exec -it portfolio-db psql -U portfolio_admin -d portfolio
 
 # Backup database
-docker exec postgresql pg_dump -U admin_user_db n8n_database > backup.sql
+docker exec portfolio-db pg_dump -U portfolio_admin portfolio > backup.sql
 ```
 
-### Ollama Model Management
+### Backend (uv)
 ```bash
-# Pull models (if ollama CLI is installed locally)
-ollama pull llama3.2:1b
-ollama pull mistral:instruct
+cd dashboard/backend
+uv sync                       # crée .venv depuis uv.lock
+uv run alembic upgrade head   # applique le schéma
+uv run uvicorn app.main:app --reload
+uv run ruff check app/        # lint
 
-# List available models
-ollama list
-
-# Via Docker container
-docker exec ollama ollama pull mistral:instruct
+# Ajouter une dépendance
+uv add <package>
 ```
 
-### Windows Setup
-```powershell
-# Run the Windows setup script
-.\setup-win.ps1
+### Migrations Alembic
+```bash
+cd dashboard/backend
+uv run alembic upgrade head            # appliquer
+uv run alembic revision -m "message"   # nouvelle migration (SQL brut via op.execute)
+uv run alembic current                 # version courante
 ```
 
 ## Development Workflow
 
-1. **Initial Setup**: Run `setup-win.ps1` to create `.env` and start services
-2. **Access n8n**: Navigate to http://localhost:5678 (credentials in `.env`)
-3. **Import Workflows**: Import workflow files from `n8n/` directory
-4. **Configure Integrations**: Set up GitHub tokens, Slack webhooks in n8n
-5. **Test MCP Sidecar**: Test endpoints at http://localhost:8080/mcp/tools
+1. **Setup**: `cp .env.example .env` puis renseigner les secrets
+2. **Démarrer**: `docker compose up -d --build` (migrations Alembic auto au boot)
+3. **Seed** (1×): `docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < dashboard/backend/sql/seed.sql`
+4. **Accès**: portfolio http://localhost:3000 — API http://localhost:8000/docs
 
 ## Project Structure
 
 ```
-├── docker-compose.yml          # Service definitions
-├── setup-win.ps1              # Windows setup script
-├── .env                        # Environment variables (auto-generated)
-├── .env.example               # Environment template
-├── sidecar-mcp/               # MCP sidecar service
-│   ├── src/
-│   │   ├── index.ts           # Express server
-│   │   ├── github.ts          # GitHub API integration
-│   │   └── mcpTools.ts        # Tool registry
-│   ├── Dockerfile
-│   └── package.json
-├── sql/                       # Database schema and seeds
-│   ├── schema.sql
-│   └── seed.sql
-├── n8n/                       # n8n workflow definitions
-├── prompts/                   # AI prompts for portfolio generation
-│   ├── system_agent.md
-│   ├── summarize_project.md
-│   └── validate_publish.md
-├── dashboard/                 # React portfolio dashboard (planned)
-└── volumes/                   # Persistent data storage
-    ├── n8n_data/
-    ├── postgres_data/
-    └── ollama_data/
+├── docker-compose.yml          # 3 services : db, backend, frontend
+├── .env / .env.example         # variables d'environnement (.env gitignoré)
+├── dashboard/
+│   ├── backend/                # API FastAPI (uv)
+│   │   ├── app/
+│   │   │   ├── main.py         # factory + lifespan (pool) + routers
+│   │   │   ├── config.py       # Settings (pydantic-settings)
+│   │   │   ├── db.py           # pool asyncpg + dépendance get_db
+│   │   │   ├── models.py       # modèles Pydantic
+│   │   │   ├── routers/        # portfolio, profile, showcase, modes,
+│   │   │   │                   #   analytics, exports, social, github
+│   │   │   └── services/       # github.py (API GitHub) + llm.py (OpenAI)
+│   │   ├── alembic/            # migrations (baseline = sql/schema.sql)
+│   │   ├── sql/                # schema.sql (DDL) + seed.sql (données démo)
+│   │   ├── pyproject.toml + uv.lock
+│   │   └── Dockerfile
+│   └── frontend/               # React + Vite + Tailwind
+└── volumes/                    # postgres_data (persistance)
 ```
 
 ## Database Schema
@@ -113,62 +111,48 @@ The system uses two main tables:
 
 ## Security Notes
 
-- All sensitive credentials are in `.env` (not committed)
-- PostgreSQL uses auto-generated random passwords
-- n8n requires basic auth (credentials in `.env`)
-- The system is designed for local/personal use
+- All sensitive credentials are in `.env` (not committed); no secret hardcoded in code
+- The backend requires `DB_PASSWORD` from the environment (no default value)
+- The system is designed for local/personal use, deployable on a small VPS
 
-## MCP Integration
+## GitHub Integration (ex-MCP sidecar)
 
-The MCP (Model Context Protocol) sidecar provides:
-- GitHub repository listing and README fetching
-- HTTP API endpoints for tool registration and execution
-- Bridge between n8n workflows and external data sources
+GitHub access lives in the Python backend (`app/services/github.py`), exposed via:
+- `GET  /api/github/repos`            — list public repos
+- `GET  /api/github/readme?owner&repo` — fetch a README
+- `POST /api/github/sync`             — summarize repos via LLM and upsert as `draft`
 
-### Available MCP Tools
-- `github.list_repos`: List all public repositories
-- `github.read_readme`: Fetch README content from a specific repository
-
-### Testing MCP Endpoints
 ```bash
-# List available tools
-curl http://localhost:8080/mcp/tools | jq
-
-# Call a specific tool
-curl -X POST http://localhost:8080/mcp/call \
-  -H 'Content-Type: application/json' \
-  -d '{"tool":"github.list_repos"}' | jq
+curl http://localhost:8000/api/github/repos | jq
+curl -X POST "http://localhost:8000/api/github/sync?min_stars=0&limit=10" | jq
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 - **Docker not found**: Install Docker Desktop from https://www.docker.com/get-started/
-- **Port conflicts**: Ensure ports 5432, 5678, and 11434 are available
-- **Permission errors**: On Windows, run setup script as administrator if needed
-- **Ollama models not downloading**: Check internet connection and disk space
+- **Port conflicts**: Ensure ports 5432, 8000, and 3000 are available
+- **Backend won't start**: vérifier que `.env` contient `DB_PASSWORD` et que la DB est `healthy`
+- **Migrations**: `docker compose logs backend` montre la sortie `alembic upgrade head`
 
 ### Log Locations
-- n8n logs: `docker compose logs n8n`
+- Backend logs: `docker compose logs backend`
 - PostgreSQL logs: `docker compose logs db`
-- Ollama logs: `docker compose logs ollama`
-- MCP Sidecar logs: `docker compose logs sidecar`
+- Frontend logs: `docker compose logs frontend`
 
-## Workflow Process
+## Sync Process (POST /api/github/sync)
 
-1. **Trigger**: Cron (weekly) or webhook (manual)
-2. **Scan**: Fetch repos via MCP sidecar
-3. **Filter**: Recent repos (7 days) or popular (>5 stars)
-4. **Analyze**: Generate summaries with Ollama LLM
-5. **Validate**: Human approval via Slack/Telegram
-6. **Publish**: Push to Notion/portfolio site
-7. **Audit**: Log all operations to PostgreSQL
+1. **Trigger**: appel HTTP manuel, cron VPS, ou GitHub Action (pas de service permanent)
+2. **Scan**: `app/services/github.py` liste les repos via l'API GitHub
+3. **Filter**: `min_stars`, `include_forks`, `limit` en query params
+4. **Analyze**: `app/services/llm.py` génère un résumé via l'API OpenAI
+5. **Upsert**: insertion en statut `draft` dans `portfolio_items` (validation humaine requise)
+6. **Audit**: chaque opération journalisée dans `portfolio_events`
 
 ## AI Configuration
 
-The system uses Ollama for local LLM inference. Recommended models:
-- `llama3.2:1b`: Fast, lightweight summaries
-- `mistral:instruct`: Higher quality analysis
+Résumés générés via l'**API OpenAI** (à la demande, aucun LLM local). Modèle par
+défaut : `gpt-4o-mini` (configurable via `OPENAI_MODEL`). Voir `app/services/llm.py`.
 
 Portfolio items include:
 - Title and short pitch (CV-ready)
@@ -182,12 +166,12 @@ Portfolio items include:
 ### ✅ What's Already Built (Backend Foundation)
 
 **Infrastructure**:
-- ✅ Docker compose stack (n8n, PostgreSQL, Ollama, MCP Sidecar)
-- ✅ Database schema with portfolio_items, portfolio_events, portfolio_config
-- ✅ n8n workflow automation for GitHub scanning
-- ✅ Ollama integration for AI-powered project summarization
-- ✅ MCP Sidecar for GitHub API integration
-- ✅ Dashboard backend (FastAPI) with REST API
+- ✅ Docker compose stack (PostgreSQL, FastAPI backend, React frontend)
+- ✅ Database schema with portfolio_items, portfolio_events, portfolio_config (Alembic)
+- ✅ GitHub sync endpoint (`POST /api/github/sync`) — ex-workflow n8n
+- ✅ OpenAI integration for on-demand project summarization (`app/services/llm.py`)
+- ✅ GitHub API client in Python (`app/services/github.py`) — ex-sidecar Node
+- ✅ Dashboard backend (FastAPI, package `app/` + pool asyncpg) with REST API
 - ✅ Dashboard frontend structure (React + Vite + Tailwind)
 
 **Backend API Features**:
@@ -636,47 +620,36 @@ CREATE TABLE chatbot_conversations (
 - ✅ **Phase 1 COMPLETE**: Hero, Timeline, Profile API, Full data flow
 - ✅ **Phase 2 COMPLETE**: Projects, Blog, Testimonials, Skills, Contact Form
 - ✅ **Phase 3 COMPLETE**: Dual Mode (CDI/Freelance), Analytics, Content Overrides
-- ✅ **n8n Automation**: 4 workflows created (GitHub sync, notifications, analytics, content review)
+- ✅ **Migration**: stack n8n+Ollama+sidecar Node → stack Python unique (FastAPI + uv + Alembic)
 
-## n8n Workflows Created
+## Automation (replaces the old n8n workflows)
 
-Located in `n8n/workflows/`:
-
-1. **`1_github_portfolio_sync.json`**: Auto-sync GitHub repos every 6h with Ollama summaries
-2. **`2_visitor_notifications.json`**: Real-time visitor alerts every 15min
-3. **`3_analytics_daily_digest.json`**: Daily analytics report at 9AM
-4. **`4_content_review_alerts.json`**: Content pending review alerts every 12h
-
-**Setup Guide**: See `N8N_SETUP_GUIDE.md` for complete configuration instructions.
+L'ancienne automatisation n8n (4 workflows) est remplacée par :
+- **Sync GitHub** : `POST /api/github/sync` — à câbler sur un cron VPS ou une GitHub Action
+- **Analytics / notifications** : exposés via l'API (`/api/analytics/*`), à consommer
+  par un cron externe si besoin de digests email/Slack
 
 ## Quick Start
 
 ```bash
-# 1. Start all services
-docker compose up -d
+# 1. Configurer puis démarrer (migrations Alembic auto au boot du backend)
+cp .env.example .env          # renseigner DB / GitHub / OpenAI
+docker compose up -d --build
 
-# 2. Apply all migrations
-cat sql/phase1_schema.sql | docker exec -i postgresql psql -U admin_user_db -d n8n_database
-cat sql/phase1_seed.sql | docker exec -i postgresql psql -U admin_user_db -d n8n_database
-cat sql/phase2_schema.sql | docker exec -i postgresql psql -U admin_user_db -d n8n_database
-cat sql/phase2_seed.sql | docker exec -i postgresql psql -U admin_user_db -d n8n_database
-cat sql/phase3_schema.sql | docker exec -i postgresql psql -U admin_user_db -d n8n_database
-cat sql/phase3_seed.sql | docker exec -i postgresql psql -U admin_user_db -d n8n_database
+# 2. Charger les données d'exemple (une fois)
+docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+  < dashboard/backend/sql/seed.sql
 
-# 3. Start frontend
-cd dashboard/frontend
-npm install
-npm run dev
-
-# 4. Access services
-# Portfolio: http://localhost:3005
-# Backend API: http://localhost:8000/docs
-# n8n: http://localhost:5678
+# 3. Accès
+#   Portfolio   : http://localhost:3000
+#   Backend API : http://localhost:8000/docs
+#   Santé       : http://localhost:8000/health
 ```
+
+Développement backend hors Docker : voir la section **Common Commands → Backend (uv)**.
 
 ## Next Steps
 
-1. **Personalize Data**: Edit `sql/phase*_seed.sql` files with your real information
-2. **Configure n8n**: Follow `N8N_SETUP_GUIDE.md` to set up automation workflows
-3. **Import Workflows**: Import JSON workflows from `n8n/workflows/` into n8n interface
-4. **Deploy**: Deploy to production (Vercel + Railway/Render recommended)
+1. **Personnaliser les données** : éditer `dashboard/backend/sql/seed.sql`
+2. **Câbler la synchro GitHub** : cron VPS ou GitHub Action sur `POST /api/github/sync`
+3. **Déployer** : VPS via `docker compose` (3 conteneurs)

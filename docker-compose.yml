@@ -1,91 +1,67 @@
-# docker-compose.yml
+# Stack portfolio : 3 services (db, backend, frontend).
+# n8n, Ollama et le sidecar MCP ont été retirés (voir README).
 services:
   db:
     image: postgres:15
-    container_name: postgresql
-    restart: always
-    env_file:
-      - .env
+    container_name: portfolio-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      # Port hôte configurable (évite les conflits avec d'autres Postgres locaux).
+      # Le backend, lui, joint la DB via le réseau Docker sur 5432.
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - ./volumes/postgres_data:/var/lib/postgresql/data
-      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
-      - n8n_network
+      - portfolio_net
 
-  n8n:
-    image: n8nio/n8n:latest
-    container_name: n8n
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "5678:5678"
-    volumes:
-      - ./volumes/n8n_data:/root/.n8n
-    networks:
-      - n8n_network
-    depends_on:
-      - db
-      
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ollama
-    restart: always
-    ports:
-      - "11434:11434"
-    environment:
-      - OLLAMA_GPU_LAYERS=20
-      - OLLAMA_NUM_PARALLEL=4
-    volumes:
-      - ./volumes/ollama_data:/root/.ollama
-    networks:
-      - n8n_network
-
-  sidecar:
-    build: ./sidecar-mcp
-    container_name: sidecar-mcp
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "8080:8080"
-    networks:
-      - n8n_network
-    depends_on:
-      - db
-
-  dashboard-backend:
+  backend:
     build: ./dashboard/backend
-    container_name: dashboard-backend
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "8000:8000"
-    networks:
-      - n8n_network
-    depends_on:
-      - db
+    container_name: portfolio-backend
+    restart: unless-stopped
+    # Applique les migrations Alembic puis démarre l'API.
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     environment:
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USER=admin_user_db
-      - DB_PASSWORD=O2ZkUw6Qjh5HCJT97mNWFgtzDaPv1LeA
-      - DB_NAME=n8n_database
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_NAME=${POSTGRES_DB}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_USERNAME=${GITHUB_USERNAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - portfolio_net
 
-  dashboard-frontend:
+  frontend:
     build: ./dashboard/frontend
-    container_name: dashboard-frontend
-    restart: always
+    container_name: portfolio-frontend
+    restart: unless-stopped
     ports:
       - "3000:80"
-    networks:
-      - n8n_network
     depends_on:
-      - dashboard-backend
+      - backend
+    networks:
+      - portfolio_net
 
 networks:
-  n8n_network:
+  portfolio_net:
