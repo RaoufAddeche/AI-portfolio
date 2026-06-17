@@ -58,9 +58,9 @@ export default function Hero({ profile, loading }) {
           </div>
         </div>
 
-        {/* Portrait / monogramme */}
-        <div className="hidden justify-self-end lg:block">
-          <div className="relative h-72 w-72 overflow-hidden rounded-2xl border border-line bg-accent-soft">
+        {/* Portrait / monogramme (au-dessus du texte sur mobile) */}
+        <div className="order-first justify-self-center lg:order-none lg:justify-self-end">
+          <div className="relative h-44 w-44 overflow-hidden rounded-2xl border border-line bg-accent-soft sm:h-56 sm:w-56 lg:h-72 lg:w-72">
             {profile.photo_url ? (
               <img
                 src={profile.photo_url}

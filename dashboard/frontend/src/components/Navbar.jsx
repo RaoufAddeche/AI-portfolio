@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Github, Linkedin, Mail } from "lucide-react";
+import { Github, Linkedin, Mail, Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { useLang } from "../i18n.jsx";
 
@@ -30,6 +30,7 @@ function LangToggle() {
 
 export default function Navbar({ name, social = [] }) {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -48,7 +49,7 @@ export default function Navbar({ name, social = [] }) {
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-colors duration-200 ${
-        scrolled ? "border-line bg-surface/85 backdrop-blur" : "border-transparent bg-surface"
+        scrolled || menuOpen ? "border-line bg-surface/95 backdrop-blur" : "border-transparent bg-surface"
       }`}
     >
       <nav className="container-page flex h-16 items-center justify-between">
@@ -60,6 +61,7 @@ export default function Navbar({ name, social = [] }) {
         </a>
 
         <div className="flex items-center gap-1">
+          {/* Liens desktop */}
           <ul className="hidden items-center gap-1 md:flex">
             {LINKS.map((l) => (
               <li key={l.href}>
@@ -73,7 +75,9 @@ export default function Navbar({ name, social = [] }) {
             ))}
           </ul>
           <span className="mx-2 hidden h-5 w-px bg-line md:block" />
-          <div className="flex items-center gap-1">
+
+          {/* Réseaux : masqués sur très petit écran (dispo en footer/contact) */}
+          <div className="hidden items-center gap-1 sm:flex">
             {social.map((s) => {
               const Icon = ICONS[s.platform];
               if (!Icon) return null;
@@ -90,11 +94,41 @@ export default function Navbar({ name, social = [] }) {
                 </a>
               );
             })}
-            <LangToggle />
-            <ThemeToggle />
           </div>
+
+          <LangToggle />
+          <ThemeToggle />
+
+          {/* Hamburger (mobile) */}
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Menu"
+            aria-expanded={menuOpen}
+            className="grid h-9 w-9 place-items-center rounded-md text-body transition-colors hover:bg-surface-2 hover:text-ink md:hidden"
+          >
+            {menuOpen ? <X className="h-5 w-5" strokeWidth={1.75} /> : <Menu className="h-5 w-5" strokeWidth={1.75} />}
+          </button>
         </div>
       </nav>
+
+      {/* Menu mobile déroulant */}
+      {menuOpen && (
+        <div className="border-t border-line bg-surface md:hidden">
+          <ul className="container-page flex flex-col py-2">
+            {LINKS.map((l) => (
+              <li key={l.href}>
+                <a
+                  href={l.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-md px-2 py-3 text-sm font-medium text-body transition-colors hover:bg-surface-2 hover:text-ink"
+                >
+                  {t(l.key)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </header>
   );
 }
