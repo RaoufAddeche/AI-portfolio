@@ -33,7 +33,7 @@ export default function App() {
     Promise.allSettled([
       fetch(`/api/profile${q}`).then(json),
       fetch(`/api/timeline${q}`).then(json),
-      fetch(`/api/portfolio${q}`).then(json), // vrais repos GitHub synchronisés
+      fetch(`/api/portfolio${q}&status=approved`).then(json), // projets validés uniquement
       fetch(`/api/skills${q}`).then(json),
       fetch("/api/social-links").then(json),
       fetch(`/api/case-studies${q}`).then(json),

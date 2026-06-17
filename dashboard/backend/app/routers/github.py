@@ -29,8 +29,11 @@ _TOPIC_MAP = [
     (("agent", "agentic", "agents", "mcp", "autonomous", "langgraph"), "IA Agentique"),
     (("data-science", "machine-learning", "ml", "datascience", "deep-learning",
       "scikit-learn", "pytorch", "kaggle"), "Data Science / ML"),
-    (("data-engineering", "etl", "pipeline", "spark", "pyspark", "airflow", "dbt"),
+    (("data-engineering", "etl", "spark", "pyspark", "airflow", "dbt"),
      "Data Engineering"),
+    (("devops", "mlops", "ci-cd", "cicd", "docker", "kubernetes", "k8s", "terraform",
+      "github-actions", "deployment", "aws", "infra", "monitoring"),
+     "MLOps / DevOps"),
     (("web", "webapp", "react", "fastapi", "django", "api", "frontend", "website"),
      "Application / Web"),
 ]
@@ -113,10 +116,13 @@ async def sync_repos(
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"GitHub: {exc}") from exc
 
+    # Exclut les forks (sauf demande) et le repo de profil (username/username).
+    profile_repo = (settings.github_username or "").lower()
     candidates = [
         r for r in repos
         if (include_forks or not r.get("fork"))
         and r.get("stargazers_count", 0) >= min_stars
+        and r["name"].lower() != profile_repo
     ][:limit]
 
     summarized, skipped, errors = [], [], []

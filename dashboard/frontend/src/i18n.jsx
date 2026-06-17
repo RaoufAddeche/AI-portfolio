@@ -179,6 +179,7 @@ const CATEGORIES_EN = {
   "IA Agentique": "Agentic AI",
   "Data Science / ML": "Data Science / ML",
   "Data Engineering": "Data Engineering",
+  "MLOps / DevOps": "MLOps / DevOps",
   "Application / Web": "Application / Web",
   Autre: "Other",
 };

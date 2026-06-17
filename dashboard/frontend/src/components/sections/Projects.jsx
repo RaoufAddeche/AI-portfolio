@@ -15,6 +15,7 @@ export default function Projects({ projects = [] }) {
       "IA Agentique",
       "Data Science / ML",
       "Data Engineering",
+      "MLOps / DevOps",
       "Application / Web",
       "Autre",
     ];

@@ -15,6 +15,7 @@ CATEGORIES = [
     "IA Agentique",
     "Data Science / ML",
     "Data Engineering",
+    "MLOps / DevOps",
     "Application / Web",
     "Autre",
 ]

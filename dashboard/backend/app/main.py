@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .db import close_pool, init_pool
 from .routers import (
+    admin,
     analytics,
     case_studies,
     chat,
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
         github,
         chat,
         case_studies,
+        admin,
     ):
         app.include_router(module.router)
 
