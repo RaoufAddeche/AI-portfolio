@@ -91,12 +91,12 @@ function HeroSkeleton() {
   return (
     <section className="section pt-14 md:pt-20">
       <div className="container-page max-w-2xl space-y-5">
-        <div className="h-4 w-40 animate-pulse rounded bg-slate-100" />
-        <div className="h-14 w-3/4 animate-pulse rounded bg-slate-100" />
-        <div className="h-20 w-full animate-pulse rounded bg-slate-100" />
+        <div className="h-4 w-40 animate-pulse rounded bg-surface-2" />
+        <div className="h-14 w-3/4 animate-pulse rounded bg-surface-2" />
+        <div className="h-20 w-full animate-pulse rounded bg-surface-2" />
         <div className="flex gap-3">
-          <div className="h-11 w-40 animate-pulse rounded-md bg-slate-100" />
-          <div className="h-11 w-32 animate-pulse rounded-md bg-slate-100" />
+          <div className="h-11 w-40 animate-pulse rounded-md bg-surface-2" />
+          <div className="h-11 w-32 animate-pulse rounded-md bg-surface-2" />
         </div>
       </div>
     </section>

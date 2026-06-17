@@ -45,7 +45,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-bg">
       <Navbar name={data.profile?.full_name} social={data.social} />
       <main>
         <Hero profile={data.profile} social={data.social} loading={loading} />

@@ -31,7 +31,7 @@ export default function CaseStudies({ studies = [] }) {
               onClick={() => setSelected(cs)}
               className="card group text-left"
             >
-              <div className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+              <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
                 {cs.company && <span className="font-medium text-accent">{cs.company}</span>}
                 {cs.period && <span>· {cs.period}</span>}
               </div>
@@ -72,17 +72,17 @@ function CaseModal({ study, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-ink/40 p-4 backdrop-blur-sm sm:p-8"
+      className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm sm:p-8"
       onClick={onClose}
     >
       <div
-        className="my-4 w-full max-w-2xl rounded-2xl border border-line bg-white shadow-2xl animate-fade-up"
+        className="my-4 w-full max-w-2xl rounded-2xl border border-line bg-surface shadow-2xl animate-fade-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* En-tête */}
-        <div className="sticky top-0 flex items-start justify-between gap-4 rounded-t-2xl border-b border-line bg-white/90 px-6 py-5 backdrop-blur">
+        <div className="sticky top-0 flex items-start justify-between gap-4 rounded-t-2xl border-b border-line bg-surface/90 px-6 py-5 backdrop-blur">
           <div>
-            <div className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
               {study.company && <span className="font-medium text-accent">{study.company}</span>}
               {study.role && <span>· {study.role}</span>}
               {study.period && <span>· {study.period}</span>}
@@ -93,7 +93,7 @@ function CaseModal({ study, onClose }) {
           <button
             onClick={onClose}
             aria-label="Fermer"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-ink"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-ink"
           >
             <X className="h-5 w-5" strokeWidth={1.75} />
           </button>
@@ -109,12 +109,12 @@ function CaseModal({ study, onClose }) {
               <div className="flex flex-col gap-2">
                 {study.architecture.map((a, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <div className="flex-1 rounded-lg border border-line bg-slate-50 px-4 py-3">
+                    <div className="flex-1 rounded-lg border border-line bg-surface-2 px-4 py-3">
                       <p className="text-sm font-medium text-ink">{a.step}</p>
                       {a.tech && <p className="mt-0.5 text-xs text-accent">{a.tech}</p>}
                     </div>
                     {i < study.architecture.length - 1 && (
-                      <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" strokeWidth={2} />
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted" strokeWidth={2} />
                     )}
                   </div>
                 ))}

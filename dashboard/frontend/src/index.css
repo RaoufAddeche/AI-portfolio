@@ -3,13 +3,40 @@
 @tailwind utilities;
 
 @layer base {
+  /* Tokens couleur (format "R G B" pour permettre l'opacité Tailwind). */
+  :root {
+    --bg: 255 255 255;
+    --surface: 255 255 255;
+    --surface-2: 248 250 252;
+    --ink: 15 23 42;
+    --body: 71 85 105;
+    --muted: 100 116 139;
+    --line: 226 232 240;
+    --accent: 31 78 121;
+    --accent-hover: 22 58 92;
+    --accent-soft: 238 243 248;
+  }
+
+  .dark {
+    --bg: 9 14 26;
+    --surface: 17 25 41;
+    --surface-2: 23 33 52;
+    --ink: 241 245 249;
+    --body: 156 168 186;
+    --muted: 120 133 153;
+    --line: 31 43 64;
+    --accent: 110 165 224;
+    --accent-hover: 142 188 235;
+    --accent-soft: 27 41 64;
+  }
+
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: 5rem; /* compense la navbar sticky lors des ancres */
+    scroll-padding-top: 5rem;
   }
 
   body {
-    @apply bg-white text-body font-sans antialiased;
+    @apply bg-bg text-body font-sans antialiased;
     font-feature-settings: "cv05", "ss01";
   }
 
@@ -23,22 +50,18 @@
 }
 
 @layer components {
-  /* Conteneur de page cohérent */
   .container-page {
     @apply mx-auto w-full max-w-content px-6 lg:px-8;
   }
 
-  /* Rythme vertical des sections */
   .section {
     @apply py-20 md:py-28 scroll-mt-20;
   }
 
-  /* Sur-titre discret au-dessus des titres de section */
   .overline {
     @apply text-xs font-semibold uppercase tracking-[0.18em] text-accent;
   }
 
-  /* Boutons : sobres, sans effets clinquants */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5
            text-sm font-medium transition-colors duration-150
@@ -54,21 +77,18 @@
     @apply btn text-body hover:text-ink;
   }
 
-  /* Carte neutre, bordure fine, ombre minimale */
   .card {
-    @apply rounded-xl border border-line bg-white p-6 transition-colors duration-150 hover:border-accent/40;
+    @apply rounded-xl border border-line bg-surface p-6 transition-colors duration-150 hover:border-accent/40;
   }
 
-  /* Étiquette discrète (techno, tag) */
   .chip {
-    @apply inline-flex items-center rounded-md border border-line bg-slate-50 px-2.5 py-1
-           text-xs font-medium text-slate-600;
+    @apply inline-flex items-center rounded-md border border-line bg-surface-2 px-2.5 py-1
+           text-xs font-medium text-body;
   }
 
-  /* Champs de formulaire */
   .field {
-    @apply w-full rounded-md border border-line bg-white px-3.5 py-2.5 text-sm text-ink
-           placeholder:text-slate-400 focus:border-accent focus:outline-none
+    @apply w-full rounded-md border border-line bg-surface px-3.5 py-2.5 text-sm text-ink
+           placeholder:text-muted focus:border-accent focus:outline-none
            focus:ring-2 focus:ring-accent/20;
   }
 }

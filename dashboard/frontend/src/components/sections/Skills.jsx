@@ -16,7 +16,7 @@ export default function Skills({ skills = [] }) {
   }
 
   return (
-    <section id="competences" className="section bg-slate-50">
+    <section id="competences" className="section bg-surface-2">
       <div className="container-page">
         <SectionHead
           overline="Compétences"

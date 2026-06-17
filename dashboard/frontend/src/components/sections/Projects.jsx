@@ -50,7 +50,7 @@ export default function Projects({ projects = [] }) {
         )}
 
         {filtered.length === 0 ? (
-          <div className="mt-10 rounded-xl border border-dashed border-line p-10 text-center text-sm text-slate-500">
+          <div className="mt-10 rounded-xl border border-dashed border-line p-10 text-center text-sm text-muted">
             Projets en cours de curation.
           </div>
         ) : (
@@ -80,7 +80,7 @@ function ProjectCard({ project: p }) {
           {p.title}
         </h3>
         <ArrowUpRight
-          className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-accent"
+          className="mt-0.5 h-4 w-4 shrink-0 text-muted transition-colors group-hover:text-accent"
           strokeWidth={1.75}
         />
       </div>
@@ -105,7 +105,7 @@ function ProjectCard({ project: p }) {
         </div>
       )}
 
-      <div className="mt-4 flex items-center gap-4 border-t border-line pt-3 text-xs text-slate-500">
+      <div className="mt-4 flex items-center gap-4 border-t border-line pt-3 text-xs text-muted">
         {p.github_language && (
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-accent" />

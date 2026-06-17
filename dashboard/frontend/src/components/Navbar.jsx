@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Github, Linkedin, Mail } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 const LINKS = [
   { href: "#etudes-de-cas", label: "Études de cas" },
@@ -30,7 +31,7 @@ export default function Navbar({ name, social = [] }) {
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-colors duration-200 ${
-        scrolled ? "border-line bg-white/85 backdrop-blur" : "border-transparent bg-white"
+        scrolled ? "border-line bg-surface/85 backdrop-blur" : "border-transparent bg-surface"
       }`}
     >
       <nav className="container-page flex h-16 items-center justify-between">
@@ -66,12 +67,13 @@ export default function Navbar({ name, social = [] }) {
                   target={s.platform === "email" ? undefined : "_blank"}
                   rel="noopener noreferrer"
                   aria-label={s.display_name}
-                  className="grid h-9 w-9 place-items-center rounded-md text-body transition-colors hover:bg-slate-100 hover:text-ink"
+                  className="grid h-9 w-9 place-items-center rounded-md text-body transition-colors hover:bg-surface-2 hover:text-ink"
                 >
                   <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
                 </a>
               );
             })}
+            <ThemeToggle />
           </div>
         </div>
       </nav>
