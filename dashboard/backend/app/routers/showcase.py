@@ -23,18 +23,22 @@ from ..services import email
 
 router = APIRouter(tags=["showcase"])
 
-# Anti-spam soumission d'avis : fenêtre glissante par IP.
-_TESTI_WINDOW = 600.0  # 10 min
-_TESTI_MAX = 3
+# Anti-spam des soumissions publiques : fenêtre glissante par IP.
 _testi_hits: dict[str, deque] = defaultdict(deque)
+_contact_hits: dict[str, deque] = defaultdict(deque)
 
 
-def _testi_rate_limited(ip: str) -> bool:
+def _client_ip(request: Request) -> str:
+    fwd = request.headers.get("x-forwarded-for", "")
+    return fwd.split(",")[0].strip() or (request.client.host if request.client else "unknown")
+
+
+def _rate_limited(store: dict[str, deque], ip: str, limit: int, window: float = 600.0) -> bool:
     now = time.monotonic()
-    dq = _testi_hits[ip]
-    while dq and now - dq[0] > _TESTI_WINDOW:
+    dq = store[ip]
+    while dq and now - dq[0] > window:
         dq.popleft()
-    if len(dq) >= _TESTI_MAX:
+    if len(dq) >= limit:
         return True
     dq.append(now)
     return False
@@ -164,10 +168,7 @@ async def submit_testimonial(
     conn: asyncpg.Connection = Depends(get_db),
 ):
     """Soumettre un avis. Stocké NON publié → notification email avec lien d'approbation."""
-    ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (
-        request.client.host if request.client else "unknown"
-    )
-    if _testi_rate_limited(ip):
+    if _rate_limited(_testi_hits, _client_ip(request), 3):
         raise HTTPException(status_code=429, detail="Trop d'envois. Réessayez plus tard.")
 
     row = await conn.fetchrow(
@@ -260,9 +261,13 @@ async def get_github_stats(
 
 @router.post("/api/contact")
 async def submit_contact_form(
-    submission: ContactSubmission, conn: asyncpg.Connection = Depends(get_db)
+    submission: ContactSubmission,
+    request: Request,
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    """Soumettre un formulaire de contact."""
+    """Soumettre un formulaire de contact (anti-spam : max 5 / 10 min par IP)."""
+    if _rate_limited(_contact_hits, _client_ip(request), 5):
+        raise HTTPException(status_code=429, detail="Trop d'envois. Réessayez plus tard.")
     result = await conn.fetchrow(
         """
         INSERT INTO contact_submissions

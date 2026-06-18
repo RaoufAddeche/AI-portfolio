@@ -19,7 +19,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-    mem_limit: 384m
+    mem_limit: 256m
     networks: [portfolio_net]
 
   backend:
@@ -48,7 +48,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    mem_limit: 384m
+    mem_limit: 320m
     networks: [portfolio_net]
 
   frontend:
@@ -56,7 +56,7 @@ services:
     container_name: portfolio-frontend
     restart: unless-stopped
     depends_on: [backend]
-    mem_limit: 96m
+    mem_limit: 64m
     networks: [portfolio_net]
 
   caddy:
@@ -73,7 +73,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on: [frontend]
-    mem_limit: 96m
+    mem_limit: 64m
     networks: [portfolio_net]
 
 volumes:
