@@ -25,7 +25,7 @@ Docker-based stack — **3 services** (volontairement réduit depuis le brief é
 > - L'automatisation n8n → endpoint `POST /api/github/sync` (déclenché à la demande / cron VPS / GitHub Action).
 > - Ollama (LLM local) → API OpenAI à la demande via `app/services/llm.py`.
 > - Sidecar GitHub Node → `app/services/github.py`.
-> - Les migrations sont gérées par **Alembic** ; le schéma vit dans `dashboard/backend/sql/schema.sql`.
+> - Les migrations sont gérées par **Alembic** ; le schéma vit dans `backend/sql/schema.sql`.
 
 ## Common Commands
 
@@ -55,7 +55,7 @@ docker exec portfolio-db pg_dump -U portfolio_admin portfolio > backup.sql
 
 ### Backend (uv)
 ```bash
-cd dashboard/backend
+cd backend
 uv sync                       # crée .venv depuis uv.lock
 uv run alembic upgrade head   # applique le schéma
 uv run uvicorn app.main:app --reload
@@ -67,7 +67,7 @@ uv add <package>
 
 ### Migrations Alembic
 ```bash
-cd dashboard/backend
+cd backend
 uv run alembic upgrade head            # appliquer
 uv run alembic revision -m "message"   # nouvelle migration (SQL brut via op.execute)
 uv run alembic current                 # version courante
@@ -77,29 +77,32 @@ uv run alembic current                 # version courante
 
 1. **Setup**: `cp .env.example .env` puis renseigner les secrets
 2. **Démarrer**: `docker compose up -d --build` (migrations Alembic auto au boot)
-3. **Seed** (1×): `docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < dashboard/backend/sql/seed.sql`
+3. **Seed** (1×): `docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backend/sql/seed.sql`
 4. **Accès**: portfolio http://localhost:3000 — API http://localhost:8000/docs
 
 ## Project Structure
 
 ```
-├── docker-compose.yml          # 3 services : db, backend, frontend
+├── docker-compose.yml          # dev : db, backend, frontend
+├── docker-compose.prod.yml     # prod : + Caddy (HTTPS auto)
+├── Caddyfile  ·  DEPLOY.md      # reverse-proxy + guide de déploiement
 ├── .env / .env.example         # variables d'environnement (.env gitignoré)
-├── dashboard/
-│   ├── backend/                # API FastAPI (uv)
-│   │   ├── app/
-│   │   │   ├── main.py         # factory + lifespan (pool) + routers
-│   │   │   ├── config.py       # Settings (pydantic-settings)
-│   │   │   ├── db.py           # pool asyncpg + dépendance get_db
-│   │   │   ├── models.py       # modèles Pydantic
-│   │   │   ├── routers/        # portfolio, profile, showcase, modes,
-│   │   │   │                   #   analytics, exports, social, github
-│   │   │   └── services/       # github.py (API GitHub) + llm.py (OpenAI)
-│   │   ├── alembic/            # migrations (baseline = sql/schema.sql)
-│   │   ├── sql/                # schema.sql (DDL) + seed.sql (données démo)
-│   │   ├── pyproject.toml + uv.lock
-│   │   └── Dockerfile
-│   └── frontend/               # React + Vite + Tailwind
+├── backend/                    # API FastAPI (uv)
+│   ├── app/
+│   │   ├── main.py             # factory + lifespan (pool) + routers
+│   │   ├── config.py           # Settings (pydantic-settings)
+│   │   ├── db.py               # pool asyncpg + dépendance get_db
+│   │   ├── models.py           # modèles Pydantic
+│   │   ├── i18n.py             # localisation FR/EN
+│   │   ├── routers/            # portfolio, profile, showcase, modes,
+│   │   │                       #   analytics, exports, social, github,
+│   │   │                       #   chat, case_studies, admin
+│   │   └── services/           # github.py (API GitHub) + llm.py (OpenAI) + email.py
+│   ├── alembic/                # migrations (baseline = sql/schema.sql)
+│   ├── sql/                    # schema.sql (DDL) + seed.sql (données réelles)
+│   ├── pyproject.toml + uv.lock
+│   └── Dockerfile
+├── frontend/                   # React + Vite + Tailwind (+ page /admin)
 └── volumes/                    # postgres_data (persistance)
 ```
 
@@ -638,7 +641,7 @@ docker compose up -d --build
 
 # 2. Charger les données d'exemple (une fois)
 docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-  < dashboard/backend/sql/seed.sql
+  < backend/sql/seed.sql
 
 # 3. Accès
 #   Portfolio   : http://localhost:3000
@@ -650,6 +653,6 @@ Développement backend hors Docker : voir la section **Common Commands → Backe
 
 ## Next Steps
 
-1. **Personnaliser les données** : éditer `dashboard/backend/sql/seed.sql`
+1. **Personnaliser les données** : éditer `backend/sql/seed.sql`
 2. **Câbler la synchro GitHub** : cron VPS ou GitHub Action sur `POST /api/github/sync`
 3. **Déployer** : VPS via `docker compose` (3 conteneurs)

@@ -29,7 +29,7 @@ docker compose up -d --build
 
 # 3. Charger les données d'exemple (une seule fois, données perso)
 docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-  < dashboard/backend/sql/seed.sql
+  < backend/sql/seed.sql
 
 # 4. Accès
 #   Portfolio : http://localhost:3000
@@ -42,7 +42,7 @@ docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
 Le backend utilise [uv](https://docs.astral.sh/uv/) :
 
 ```bash
-cd dashboard/backend
+cd backend
 uv sync                       # crée .venv et installe depuis uv.lock
 uv run alembic upgrade head   # applique le schéma
 uv run uvicorn app.main:app --reload
@@ -52,7 +52,7 @@ uv run ruff check app/        # lint
 ## Structure backend
 
 ```
-dashboard/backend/
+backend/
 ├── app/
 │   ├── main.py            # factory FastAPI + lifespan (pool) + montage routers
 │   ├── config.py          # Settings (pydantic-settings, secrets via env)

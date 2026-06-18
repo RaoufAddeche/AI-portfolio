@@ -24,7 +24,7 @@ services:
       - portfolio_net
 
   backend:
-    build: ./dashboard/backend
+    build: ./backend
     container_name: portfolio-backend
     restart: unless-stopped
     # Applique les migrations Alembic puis démarre l'API.
@@ -61,7 +61,7 @@ services:
       - portfolio_net
 
   frontend:
-    build: ./dashboard/frontend
+    build: ./frontend
     container_name: portfolio-frontend
     restart: unless-stopped
     ports:

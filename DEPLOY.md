@@ -74,7 +74,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 Charge les données d'exemple (profil, parcours, skills, études de cas) **une fois** :
 ```bash
 docker compose -f docker-compose.prod.yml exec -T db \
-  psql -U portfolio_admin -d portfolio < dashboard/backend/sql/seed.sql
+  psql -U portfolio_admin -d portfolio < backend/sql/seed.sql
 ```
 
 ## 6. Vérifier

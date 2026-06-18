@@ -23,7 +23,7 @@ services:
     networks: [portfolio_net]
 
   backend:
-    build: ./dashboard/backend
+    build: ./backend
     container_name: portfolio-backend
     restart: unless-stopped
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
@@ -52,7 +52,7 @@ services:
     networks: [portfolio_net]
 
   frontend:
-    build: ./dashboard/frontend
+    build: ./frontend
     container_name: portfolio-frontend
     restart: unless-stopped
     depends_on: [backend]
