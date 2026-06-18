@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # Notification email des messages de contact (via Resend). Si la clé est
     # absente, le message reste enregistré en base mais aucun email n'est envoyé.
     resend_api_key: str | None = None
-    contact_notify_to: str = "addeche.raouf@gmail.com"
+    contact_notify_to: str = ""  # email de réception (à définir via .env)
     contact_from: str = "Portfolio <onboarding@resend.dev>"
 
     # Modération des avis : secret pour signer les liens d'approbation (HMAC) et
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
 
     # Le chatbot lit ce CV (PDF) comme base de connaissance, à jour automatiquement.
     # URL interne (réseau Docker) du frontend qui sert le fichier statique.
-    cv_url: str = "http://frontend/cv-raouf-addeche-fr.pdf"
+    cv_url: str = "http://frontend/cv.pdf"
 
     @property
     def dsn(self) -> str:

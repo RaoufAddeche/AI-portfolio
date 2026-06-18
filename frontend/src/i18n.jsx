@@ -11,8 +11,6 @@ const STRINGS = {
     "hero.cta_projects": "Voir mes projets",
     "hero.cta_cv": "Télécharger le CV",
     "hero.cta_contact": "Me contacter",
-    "hero.fact_role": "Développeur IA — Midas / Mobivia",
-    "hero.fact_school": "Simplon × Microsoft (2024–2026)",
 
     "cases.overline": "Études de cas",
     "cases.title": "Des projets en production, racontés",
@@ -96,8 +94,6 @@ const STRINGS = {
     "hero.cta_projects": "View my projects",
     "hero.cta_cv": "Download CV",
     "hero.cta_contact": "Get in touch",
-    "hero.fact_role": "AI Developer — Midas / Mobivia",
-    "hero.fact_school": "Simplon × Microsoft (2024–2026)",
 
     "cases.overline": "Case studies",
     "cases.title": "Production projects, told properly",

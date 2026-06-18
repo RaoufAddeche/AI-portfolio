@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Github, Linkedin, Mail, Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { useLang } from "../i18n.jsx";
+import { SITE } from "../config.js";
 
 const LINKS = [
   { href: "#etudes-de-cas", key: "nav.caseStudies" },
@@ -40,7 +41,7 @@ export default function Navbar({ name, social = [] }) {
   }, []);
 
   const { t } = useLang();
-  const initials = (name || "RA")
+  const initials = (name || SITE.ownerName)
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -57,7 +58,7 @@ export default function Navbar({ name, social = [] }) {
           <span className="grid h-8 w-8 place-items-center rounded-md bg-accent text-xs font-bold text-white">
             {initials}
           </span>
-          <span className="hidden sm:inline">{name || "Raouf Addeche"}</span>
+          <span className="hidden sm:inline">{name || SITE.ownerName}</span>
         </a>
 
         <div className="flex items-center gap-1">

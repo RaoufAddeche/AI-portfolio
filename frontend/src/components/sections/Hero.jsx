@@ -1,5 +1,8 @@
-import { ArrowRight, Download, MapPin, Briefcase, GraduationCap } from "lucide-react";
+import { ArrowRight, Download, MapPin, Briefcase, GraduationCap, Dot } from "lucide-react";
 import { useLang } from "../../i18n.jsx";
+import { SITE } from "../../config.js";
+
+const FACT_ICONS = { briefcase: Briefcase, school: GraduationCap, pin: MapPin };
 
 export default function Hero({ profile, loading }) {
   const { t, lang } = useLang();
@@ -34,14 +37,15 @@ export default function Hero({ profile, loading }) {
                 {profile.location}
               </li>
             )}
-            <li className="inline-flex items-center gap-2">
-              <Briefcase className="h-4 w-4 text-accent" strokeWidth={1.75} />
-              {t("hero.fact_role")}
-            </li>
-            <li className="inline-flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-accent" strokeWidth={1.75} />
-              {t("hero.fact_school")}
-            </li>
+            {(SITE.heroFacts[lang] || []).map((f, i) => {
+              const Icon = FACT_ICONS[f.icon] || Dot;
+              return (
+                <li key={i} className="inline-flex items-center gap-2">
+                  <Icon className="h-4 w-4 text-accent" strokeWidth={1.75} />
+                  {f.text}
+                </li>
+              );
+            })}
           </ul>
 
           {/* CTA */}
@@ -49,7 +53,7 @@ export default function Hero({ profile, loading }) {
             <a href="#projets" className="btn-primary">
               {t("hero.cta_projects")} <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </a>
-            <a href={`/cv-raouf-addeche-${lang}.pdf`} download className="btn-outline">
+            <a href={`/${SITE.cvFile[lang]}`} download className="btn-outline">
               <Download className="h-4 w-4" strokeWidth={1.75} /> {t("hero.cta_cv")}
             </a>
             <a href="#contact" className="btn-ghost">

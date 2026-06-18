@@ -1,9 +1,10 @@
 import { Github, Linkedin, Mail } from "lucide-react";
+import { SITE } from "../config.js";
 
 const ICONS = { github: Github, linkedin: Linkedin, email: Mail };
 
 export default function Footer({ profile, social = [] }) {
-  const name = profile?.full_name || "Raouf Addeche";
+  const name = profile?.full_name || SITE.ownerName;
   return (
     <footer className="border-t border-line">
       <div className="container-page flex flex-col items-center justify-between gap-4 py-8 sm:flex-row">
