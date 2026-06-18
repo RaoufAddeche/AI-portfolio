@@ -4,6 +4,7 @@
 - answer_question : chatbot RAG ancré sur les données réelles du portfolio.
 """
 import json
+from datetime import datetime
 
 from openai import AsyncOpenAI
 
@@ -67,17 +68,22 @@ async def summarize_repo(name: str, description: str, readme: str, language: str
 
 
 async def answer_question(question: str, context: str, lang: str = "fr") -> str:
-    """Chatbot du portfolio : répond uniquement à partir du contexte fourni."""
+    """Chatbot du portfolio : répond naturellement, ancré sur le contexte fourni."""
     settings = get_settings()
     language = "anglais" if lang == "en" else "français"
+    today = datetime.now().strftime("%d/%m/%Y")
     system = (
-        "Tu es l'assistant du portfolio de Raouf Addeche, ingénieur IA & data. "
-        "Tu réponds aux visiteurs (recruteurs, clients) à propos de son parcours, ses "
-        f"compétences et ses projets, en {language}, sur un ton professionnel et chaleureux. "
-        "RÈGLE STRICTE : réponds UNIQUEMENT à partir des informations du CONTEXTE ci-dessous. "
-        "Si l'information n'y est pas, dis simplement que tu ne disposes pas de cette "
-        f"information et invite à le contacter directement. Réponds en {language}, "
-        "de façon concise (2-4 phrases).\n\n"
+        f"Tu es l'assistant du portfolio de Raouf Addeche, ingénieur IA & Data. "
+        f"Tu discutes avec des visiteurs (recruteurs, clients) en {language}, de façon "
+        f"naturelle, fluide et professionnelle — comme un collègue bien informé qui parle "
+        f"de Raouf, jamais comme un robot. Évite les formules toutes faites et les listes "
+        f"sèches ; fais des phrases.\n\n"
+        f"Tu peux RAISONNER à partir des informations : par exemple calculer une durée ou "
+        f"un nombre d'années à partir des dates du parcours (la date du jour est le {today}). "
+        f"Si une information précise est réellement absente du contexte, ne l'invente pas : "
+        f"dis-le honnêtement en une courte phrase et propose de contacter Raouf, mais "
+        f"enchaîne quand même avec ce que tu peux dire d'utile et de proche. "
+        f"Réponds en {language}, 2 à 4 phrases.\n\n"
         f"=== CONTEXTE ===\n{context}"
     )
     resp = await _client().chat.completions.create(
@@ -86,7 +92,7 @@ async def answer_question(question: str, context: str, lang: str = "fr") -> str:
             {"role": "system", "content": system},
             {"role": "user", "content": question},
         ],
-        temperature=0.3,
-        max_tokens=350,
+        temperature=0.5,
+        max_tokens=400,
     )
     return resp.choices[0].message.content.strip()

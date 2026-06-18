@@ -18,10 +18,12 @@ INSERT INTO profile (full_name, title, bio, hero_pitch, email, phone,
 VALUES (
   'Raouf Addeche',
   'Ingénieur IA & Data · GenAI Engineer',
-  'Passionné par l''IA appliquée et la Data, je conçois des solutions utiles, '
-  'pensées pour les usages réels et les besoins métier. Mon expérience en '
-  'relation client m''a donné une forte compréhension du terrain, que j''allie '
-  'aujourd''hui à des compétences techniques en IA générative, LLM et data engineering.',
+  'Ingénieur IA & Data de 28 ans, basé à Lille (mobilité France & international). '
+  'Après 7 ans en relation client B2B/B2C, je me suis reconverti vers la data et l''IA '
+  'via l''École Microsoft by Simplon. Je conçois des solutions utiles, pensées pour les '
+  'usages réels et les besoins métier, en combinant des compétences techniques (IA '
+  'générative, LLM, agents IA, data engineering) et une vraie compréhension du terrain. '
+  'Langues : français (langue maternelle), anglais professionnel (B2).',
   'Développeur IA chez Midas / Mobivia, je conçois des voicebots IA temps réel, '
   'des workflows basés sur les LLM et des outils d''assistance aux développeurs, '
   'déployés en production sur AWS.',
