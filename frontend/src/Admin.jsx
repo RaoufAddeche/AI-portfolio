@@ -14,12 +14,14 @@ export default function Admin() {
   const [tab, setTab] = useState("projets");
   const [error, setError] = useState("");
 
-  const tryAuth = useCallback(async (tk) => {
+  const tryAuth = useCallback(async (raw) => {
+    const tk = (raw || "").trim(); // évite l'échec si un espace/retour-ligne est collé
     try {
       const res = await api("/check", tk);
       if (!res.ok) throw new Error();
       const data = await res.json();
       setCats(data.categories || []);
+      setToken(tk);
       setAuthed(true);
       setError("");
       sessionStorage.setItem("adminToken", tk);

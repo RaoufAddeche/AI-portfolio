@@ -58,3 +58,7 @@ logs/
 
 # Mais on versionne les CV servis par le portfolio (assets publics)
 !dashboard/frontend/public/*.pdf
+
+# Fichiers temporaires / assets ponctuels
+/PROFILE_README.md
+/portfolio-qr.png
