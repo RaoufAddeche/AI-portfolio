@@ -27,7 +27,7 @@ VALUES (
   'déployés en production sur AWS.',
   'addeche.raouf@gmail.com',
   '06.87.89.90.04',
-  'https://www.linkedin.com/in/raouf-addeche-706157113/',
+  'https://www.linkedin.com/in/raouf-addeche-706157113',
   'https://github.com/RaoufAddeche',
   '/raouf.jpg',
   'Lille, France',
@@ -115,7 +115,7 @@ INSERT INTO skills (name, category, subcategory, proficiency_level, is_primary) 
 -- ---------------------------------------------------------------------
 INSERT INTO social_links (platform, url, display_name, display_order, is_active) VALUES
 ('github',   'https://github.com/RaoufAddeche',          'GitHub',   1, TRUE),
-('linkedin', 'https://www.linkedin.com/in/raouf-addeche-706157113/', 'LinkedIn', 2, TRUE),
+('linkedin', 'https://www.linkedin.com/in/raouf-addeche-706157113', 'LinkedIn', 2, TRUE),
 ('email',    'mailto:addeche.raouf@gmail.com',           'Email',    3, TRUE);
 
 -- ---------------------------------------------------------------------
