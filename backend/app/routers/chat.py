@@ -6,7 +6,6 @@ Garde-fous anti-spam / protection du budget LLM :
 """
 import time
 from collections import defaultdict, deque
-from pathlib import Path
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -15,18 +14,12 @@ from pydantic import BaseModel, Field
 from ..config import get_settings
 from ..db import get_db
 from ..i18n import localize
-from ..services import llm
+from ..services import cv, llm
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 _WINDOW_SECONDS = 60.0
 _hits: dict[str, deque] = defaultdict(deque)
-
-# Fiche de connaissance (CV) chargée une fois — base factuelle du chatbot.
-try:
-    _CV = (Path(__file__).resolve().parents[1] / "knowledge.md").read_text(encoding="utf-8")
-except OSError:
-    _CV = ""
 
 
 class ChatRequest(BaseModel):
@@ -58,8 +51,9 @@ async def _build_context(conn: asyncpg.Connection, lang: str = "fr") -> str:
     """Concatène les données du portfolio (localisées) en un contexte texte compact."""
     parts: list[str] = []
 
-    if _CV:
-        parts.append(_CV)
+    cv_text = await cv.get_cv_text()
+    if cv_text:
+        parts.append("CV (source de vérité, base de connaissance) :\n" + cv_text)
 
     row = await conn.fetchrow("SELECT * FROM profile LIMIT 1")
     if row:

@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     admin_token: str | None = None
     public_base_url: str = "http://localhost:8000"
 
+    # Le chatbot lit ce CV (PDF) comme base de connaissance, à jour automatiquement.
+    # URL interne (réseau Docker) du frontend qui sert le fichier statique.
+    cv_url: str = "http://frontend/cv-raouf-addeche-fr.pdf"
+
     @property
     def dsn(self) -> str:
         return (
