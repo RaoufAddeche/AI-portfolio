@@ -67,8 +67,10 @@ async def summarize_repo(name: str, description: str, readme: str, language: str
     return data
 
 
-async def answer_question(question: str, context: str, lang: str = "fr") -> str:
-    """Chatbot du portfolio : répond naturellement, ancré sur le contexte fourni."""
+async def answer_question(
+    question: str, context: str, lang: str = "fr", history: list[dict] | None = None
+) -> str:
+    """Chatbot du portfolio : répond naturellement, avec mémoire de la conversation."""
     settings = get_settings()
     language = "anglais" if lang == "en" else "français"
     today = datetime.now().strftime("%d/%m/%Y")
@@ -77,21 +79,27 @@ async def answer_question(question: str, context: str, lang: str = "fr") -> str:
         f"Tu discutes avec des visiteurs (recruteurs, clients) en {language}, de façon "
         f"naturelle, fluide et professionnelle — comme un collègue bien informé qui parle "
         f"de Raouf, jamais comme un robot. Évite les formules toutes faites et les listes "
-        f"sèches ; fais des phrases.\n\n"
-        f"Tu peux RAISONNER à partir des informations : par exemple calculer une durée ou "
-        f"un nombre d'années à partir des dates du parcours (la date du jour est le {today}). "
-        f"Si une information précise est réellement absente du contexte, ne l'invente pas : "
-        f"dis-le honnêtement en une courte phrase et propose de contacter Raouf, mais "
-        f"enchaîne quand même avec ce que tu peux dire d'utile et de proche. "
+        f"sèches ; fais des phrases. Tiens compte des messages précédents de la conversation "
+        f"(l'historique t'est fourni) pour répondre aux questions de suivi.\n\n"
+        f"Tu peux RAISONNER à partir des informations : calculer une durée à partir des dates "
+        f"du parcours (date du jour : {today}). Sois précis et honnête sur les durées : "
+        f"distingue bien l'ancienneté GLOBALE (depuis le tout premier poste) de l'expérience "
+        f"dans un DOMAINE précis (ex. data/IA) ou sous un INTITULÉ donné (ex. Développeur IA) "
+        f"— appuie-toi sur les dates du parcours et précise de quoi tu parles. "
+        f"Si une information précise est réellement absente, ne l'invente pas : dis-le "
+        f"honnêtement et propose de contacter Raouf, mais enchaîne avec ce que tu sais d'utile. "
         f"Réponds en {language}, 2 à 4 phrases.\n\n"
         f"=== CONTEXTE ===\n{context}"
     )
+    messages = [{"role": "system", "content": system}]
+    for m in (history or [])[-8:]:  # mémoire courte : 8 derniers échanges max
+        if m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str):
+            messages.append({"role": m["role"], "content": m["content"][:1500]})
+    messages.append({"role": "user", "content": question})
+
     resp = await _client().chat.completions.create(
         model=settings.openai_model,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": question},
-        ],
+        messages=messages,
         temperature=0.5,
         max_tokens=400,
     )

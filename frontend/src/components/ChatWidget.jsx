@@ -26,13 +26,19 @@ export default function ChatWidget() {
     const q = (question ?? input).trim();
     if (!q || loading) return;
     setInput("");
+    // Historique de conversation envoyé pour donner de la mémoire au bot
+    // (on retire le message d'accueil statique). 8 derniers échanges.
+    const history = messages
+      .slice(1)
+      .map((m) => ({ role: m.role, content: m.content }))
+      .slice(-8);
     setMessages((m) => [...m, { role: "user", content: q }]);
     setLoading(true);
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q, lang }),
+        body: JSON.stringify({ question: q, lang, history }),
       });
       const data = await res.json();
       setMessages((m) => [

@@ -25,6 +25,7 @@ _hits: dict[str, deque] = defaultdict(deque)
 class ChatRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=500)
     lang: str = "fr"
+    history: list[dict] = Field(default_factory=list)  # mémoire de conversation
 
 
 def _client_ip(request: Request) -> str:
@@ -123,7 +124,7 @@ async def chat(
 
     context = await _build_context(conn, req.lang)
     try:
-        answer = await llm.answer_question(req.question, context, req.lang)
+        answer = await llm.answer_question(req.question, context, req.lang, req.history)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"LLM: {exc}") from exc
 
