@@ -15,16 +15,19 @@ const LINKS = [
 
 const ICONS = { github: Github, linkedin: Linkedin, email: Mail };
 
+const LANG_CYCLE = { fr: "en", en: "es", es: "fr" };
+const LANG_LABEL = { fr: "FR", en: "EN", es: "ES" };
+
 function LangToggle() {
   const { lang, setLang } = useLang();
   return (
     <button
-      onClick={() => setLang(lang === "fr" ? "en" : "fr")}
-      aria-label="Changer de langue"
-      title={lang === "fr" ? "Switch to English" : "Passer en français"}
+      onClick={() => setLang(LANG_CYCLE[lang] || "fr")}
+      aria-label="Changer de langue / Change language / Cambiar idioma"
+      title="FR · EN · ES"
       className="rounded-md px-2 py-1 text-xs font-semibold text-body transition-colors hover:bg-surface-2 hover:text-ink"
     >
-      {lang === "fr" ? "EN" : "FR"}
+      {LANG_LABEL[lang] || "FR"}
     </button>
   );
 }

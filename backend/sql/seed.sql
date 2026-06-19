@@ -310,3 +310,131 @@ UPDATE case_studies SET
     'AI usage centralized and enriched via an internal MCP'
   ]
 WHERE slug = 'outils-ia-developpeurs';
+
+-- =====================================================================
+-- TRADUCCIONES ESPAÑOLAS (columnas _es) — repli FR si absent côté API
+-- =====================================================================
+
+-- Perfil
+UPDATE profile SET
+  title_es = 'Ingeniero de IA y Datos · GenAI Engineer',
+  bio_es = 'Ingeniero de IA y Datos de 28 años, residente en Lille (disponibilidad en Francia '
+    'e internacional). Tras 7 años en relación con el cliente B2B/B2C, me reorienté hacia los '
+    'datos y la IA a través de la École Microsoft by Simplon. Diseño soluciones útiles, pensadas '
+    'para los usos reales y las necesidades del negocio, combinando competencias técnicas (IA '
+    'generativa, LLM, agentes de IA, ingeniería de datos) con una verdadera comprensión del '
+    'terreno. Idiomas: francés (lengua materna), inglés profesional (B2).',
+  hero_pitch_es = 'Desarrollador de IA en Midas / Mobivia, diseño voicebots de IA en tiempo real, '
+    'flujos de trabajo basados en LLM y herramientas de asistencia para desarrolladores, '
+    'desplegados en producción en AWS.',
+  availability_es = 'Disponibilidad en Francia e internacional'
+WHERE id = 1;
+
+-- Trayectoria
+UPDATE timeline_events SET
+  title_es = 'Técnico Superior en Negociación y Relación con el Cliente',
+  description_es = 'Efficom Lille. Fundamentos de la relación comercial y del acompañamiento al cliente.'
+WHERE title = 'BTS Négociation & Relation Client';
+
+UPDATE timeline_events SET
+  title_es = 'Relación con el cliente y acompañamiento al negocio',
+  description_es = 'Experiencia de campo B2B/B2C: análisis de necesidades, acompañamiento al '
+    'negocio y colaboración con perfiles operativos variados (Onenergy/Sowee–EDF, Orange, Engie, '
+    'Regicom). Gran sensibilidad por los usos y los retos del terreno.'
+WHERE title = 'Relation client & accompagnement métier';
+
+UPDATE timeline_events SET
+  title_es = 'Precualificación Desarrollador de Datos / IA',
+  description_es = 'Simplon Hauts-de-France. Actualización de conocimientos y transición hacia el '
+    'desarrollo de Datos/IA.'
+WHERE title = 'Préqualification Développeur Data / IA';
+
+UPDATE timeline_events SET
+  title_es = 'Escuela Microsoft — Desarrollador de Datos / IA',
+  description_es = 'Simplon Hauts-de-France. Ciencia de datos, Machine Learning, IA generativa y '
+    'desarrollo de aplicaciones de IA.'
+WHERE title = 'École Microsoft — Développeur Data / IA';
+
+UPDATE timeline_events SET
+  title_es = 'Desarrollador de IA — Midas / Mobivia',
+  description_es = 'Diseño de un voicebot de IA en tiempo real (Deepgram, Claude vía AWS Bedrock, '
+    'Cartesia, Twilio, AWS ECS/DynamoDB) desplegado en producción en centros piloto. Herramientas '
+    'de asistencia al desarrollador, control de calidad automatizado antes del merge, agentes de '
+    'retro-documentación y un MCP interno conectado a las APIs del negocio.'
+WHERE title = 'Développeur IA — Midas / Mobivia';
+
+UPDATE timeline_events SET
+  title_es = 'Certificaciones Microsoft Azure',
+  description_es = 'Azure Fundamentals (AZ-900) y Azure AI Fundamentals (AI-900).'
+WHERE title = 'Certifications Microsoft Azure';
+
+-- Competencias (etiquetas de subcategorías)
+UPDATE skills SET subcategory_es = 'IA y Machine Learning'      WHERE subcategory = 'IA & Machine Learning';
+UPDATE skills SET subcategory_es = 'Backend y APIs'             WHERE subcategory = 'Backend & APIs';
+UPDATE skills SET subcategory_es = 'Cloud y DevOps'             WHERE subcategory = 'Cloud & DevOps';
+UPDATE skills SET subcategory_es = 'IA conversacional'          WHERE subcategory = 'IA conversationnelle';
+UPDATE skills SET subcategory_es = 'Datos y bases de datos'     WHERE subcategory = 'Data & Bases de données';
+UPDATE skills SET subcategory_es = 'Frontend e interfaces'      WHERE subcategory = 'Frontend & Interfaces';
+UPDATE skills SET subcategory_es = 'Competencias transversales' WHERE subcategory = 'Atouts métier';
+
+-- Nombres de competencias no técnicas (las tecnologías quedan igual -> repli FR)
+UPDATE skills SET name_es = 'Divulgación técnica'                       WHERE name = 'Vulgarisation technique';
+UPDATE skills SET name_es = 'Comprensión del negocio'                   WHERE name = 'Compréhension métier';
+UPDATE skills SET name_es = 'Autonomía y adaptabilidad'                 WHERE name = 'Autonomie & adaptabilité';
+UPDATE skills SET name_es = 'Vigilancia tecnológica e innovación en IA' WHERE name = 'Veille IA & innovation';
+
+-- Casos de éxito
+UPDATE case_studies SET
+  title_es = 'Voicebot de IA en tiempo real',
+  subtitle_es = 'Gestión automatizada de las llamadas perdidas de los centros Midas',
+  summary_es = 'Un agente de voz con IA que atiende las llamadas perdidas de los centros, entiende '
+    'la solicitud y cualifica al cliente en tiempo real — desplegado en producción en centros piloto.',
+  problem_es = 'En las horas punta y fuera del horario, muchas llamadas de clientes quedan sin '
+    'respuesta en los centros Midas: citas perdidas y frustración. El reto: no dejar ninguna '
+    'llamada sin atender, sin sobrecargar a los equipos.',
+  approach_es = 'Diseño de un agente de voz con IA en tiempo real conectado a la telefonía: atiende '
+    'la llamada perdida, transcribe el habla, razona sobre la solicitud, cualifica al cliente y '
+    'capta la intención (concertar cita, información), y luego responde con una voz natural — todo '
+    'con una latencia casi en tiempo real.',
+  architecture_es = '[
+    {"step": "Llamada entrante", "tech": "Twilio"},
+    {"step": "Transcripción (STT)", "tech": "Deepgram"},
+    {"step": "Razonamiento y diálogo", "tech": "Claude Sonnet · AWS Bedrock"},
+    {"step": "Síntesis de voz (TTS)", "tech": "Cartesia"},
+    {"step": "Respuesta al llamante", "tech": "Twilio"}
+   ]'::jsonb,
+  results_es = ARRAY[
+    'Desplegado en producción en centros piloto',
+    'Cualificación automatizada de clientes en las llamadas perdidas',
+    'Arquitectura en tiempo real de baja latencia (STT → LLM → TTS)',
+    'Objetivo de industrialización a escala nacional y europea'
+  ]
+WHERE slug = 'voicebot-ia-temps-reel';
+
+UPDATE case_studies SET
+  title_es = 'Herramientas internas de IA para desarrolladores',
+  subtitle_es = 'Hacer el desarrollo sobre una base de código legacy más rápido y fiable',
+  summary_es = 'Un ecosistema de herramientas de IA para los equipos de desarrollo: '
+    'retro-documentación de código legacy, control de calidad automatizado antes del merge y un '
+    'MCP interno conectado a las APIs del negocio.',
+  problem_es = 'Una base de código legacy (VB.NET) poco documentada, una migración en curso hacia '
+    'Angular/C# y una calidad heterogénea antes de las merge requests: fricción y riesgo para los '
+    'equipos de desarrollo.',
+  approach_es = 'Implementación de herramientas de IA al servicio de los desarrolladores: agentes '
+    'de retro-documentación que analizan el código legacy no documentado, un control de calidad '
+    'automatizado antes del merge (convenciones, desviaciones, anomalías introducidas), flujos de '
+    'prompt engineering para GitHub Copilot / Claude Code, y un MCP interno que centraliza el uso '
+    'de la IA sobre las APIs del negocio.',
+  architecture_es = '[
+    {"step": "Código legacy no documentado", "tech": "VB.NET"},
+    {"step": "Agentes de retro-documentación", "tech": "LLM"},
+    {"step": "Control de calidad antes del merge", "tech": "Análisis automatizado"},
+    {"step": "Acceso centralizado a las APIs del negocio", "tech": "MCP interno"}
+   ]'::jsonb,
+  results_es = ARRAY[
+    'Detección automática de convenciones ausentes y anomalías antes del merge',
+    'Documentación automática de un código legacy no documentado',
+    'Apoyo a la migración VB.NET → Angular/C#',
+    'Uso de IA centralizado y enriquecido mediante un MCP interno'
+  ]
+WHERE slug = 'outils-ia-developpeurs';

@@ -72,7 +72,7 @@ async def answer_question(
 ) -> str:
     """Chatbot du portfolio : répond naturellement, avec mémoire de la conversation."""
     settings = get_settings()
-    language = "anglais" if lang == "en" else "français"
+    language = {"en": "anglais", "es": "espagnol"}.get(lang, "français")
     today = datetime.now().strftime("%d/%m/%Y")
     system = (
         f"Tu es l'assistant d'un portfolio professionnel. Tu réponds aux visiteurs "

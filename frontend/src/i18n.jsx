@@ -167,6 +167,89 @@ const STRINGS = {
     "chat.error": "Sorry, something went wrong. Please try again.",
     "chat.unavailable": "Sorry, the service is momentarily unavailable.",
   },
+  es: {
+    "nav.caseStudies": "Casos de éxito",
+    "nav.projects": "Proyectos",
+    "nav.parcours": "Trayectoria",
+    "nav.skills": "Competencias",
+    "nav.contact": "Contacto",
+
+    "hero.cta_projects": "Ver mis proyectos",
+    "hero.cta_cv": "Descargar el CV",
+    "hero.cta_contact": "Contáctame",
+
+    "cases.overline": "Casos de éxito",
+    "cases.title": "Proyectos en producción, bien contados",
+    "cases.description": "El contexto, la arquitectura y los resultados — más allá del repositorio.",
+    "cases.read": "Leer el caso de éxito",
+    "cases.problem": "El problema",
+    "cases.approach": "El enfoque",
+    "cases.architecture": "Arquitectura",
+    "cases.results": "Resultados",
+    "cases.stack": "Stack",
+
+    "projects.overline": "Proyectos",
+    "projects.title": "Selección de proyectos",
+    "projects.description":
+      "Extraídos de mis repositorios de GitHub, agrupados por ámbito. Filtra según lo que te interese.",
+    "projects.all": "Todos",
+    "projects.empty": "Proyectos en proceso de curación.",
+
+    "timeline.overline": "Trayectoria",
+    "timeline.title": "De la relación con el cliente a la ingeniería de IA",
+    "timeline.experience": "Experiencia profesional",
+    "timeline.formation": "Formación",
+    "timeline.certifications": "Certificaciones",
+    "timeline.today": "actualidad",
+
+    "skills.overline": "Competencias",
+    "skills.title": "Stack y experiencia",
+    "skills.description":
+      "Herramientas y tecnologías que uso a diario, del prototipo a la producción.",
+
+    "contact.overline": "Contacto",
+    "contact.title": "Trabajemos juntos",
+    "contact.description":
+      "¿Una oportunidad, un proyecto o simplemente ganas de hablar de IA y datos? Escríbeme, respondo rápido.",
+    "contact.name": "Nombre",
+    "contact.email": "Email",
+    "contact.subject": "Asunto",
+    "contact.message": "Mensaje",
+    "contact.send": "Enviar",
+    "contact.sending": "Enviando…",
+    "contact.sent": "Enviado",
+    "contact.error": "Se ha producido un error, inténtalo de nuevo.",
+
+    "nav.testimonials": "Opiniones",
+    "testi.overline": "Opiniones",
+    "testi.title": "Han trabajado conmigo",
+    "testi.description": "Algunas opiniones de personas con las que he colaborado.",
+    "testi.leave": "Dejar una opinión",
+    "testi.empty": "Sé el primero en dejar una opinión.",
+    "testi.modal_title": "Dejar una opinión",
+    "testi.modal_hint": "Tu opinión se publicará tras su validación.",
+    "testi.f_name": "Tu nombre",
+    "testi.f_role": "Puesto / función",
+    "testi.f_company": "Empresa (opcional)",
+    "testi.f_linkedin": "Perfil de LinkedIn (opcional)",
+    "testi.f_quote": "Tu opinión",
+    "testi.submit": "Enviar opinión",
+    "testi.sending": "Enviando…",
+    "testi.thanks": "¡Gracias! Tu opinión se publicará tras su validación.",
+    "testi.error": "Se ha producido un error, inténtalo de nuevo.",
+    "testi.cancel": "Cancelar",
+
+    "chat.greeting":
+      "Hola, soy el asistente de IA de este portafolio. Pregúntame lo que quieras sobre la trayectoria, las competencias o los proyectos de Raouf.",
+    "chat.header": "Asistente del portafolio",
+    "chat.subtitle": "Impulsado por un LLM · responde sobre Raouf",
+    "chat.placeholder": "Tu pregunta…",
+    "chat.s1": "¿Cuáles son sus proyectos de IA generativa?",
+    "chat.s2": "¿Qué experiencia tiene en producción?",
+    "chat.s3": "¿Cuál es su stack técnico?",
+    "chat.error": "Lo siento, se ha producido un error. Inténtalo de nuevo.",
+    "chat.unavailable": "Lo siento, el servicio no está disponible por el momento.",
+  },
 };
 
 // Libellés de catégories (le filtre conserve la valeur FR stockée, on traduit l'affichage).
@@ -180,16 +263,33 @@ const CATEGORIES_EN = {
   Autre: "Other",
 };
 
+const CATEGORIES_ES = {
+  "IA Générative / LLM": "IA generativa / LLM",
+  "IA Agentique": "IA agéntica",
+  "Data Science / ML": "Ciencia de datos / ML",
+  "Data Engineering": "Ingeniería de datos",
+  "MLOps / DevOps": "MLOps / DevOps",
+  "Application / Web": "Aplicación / Web",
+  Autre: "Otro",
+};
+
+const CATEGORY_MAPS = { en: CATEGORIES_EN, es: CATEGORIES_ES };
+
 export function translateCategory(label, lang) {
-  return lang === "en" ? CATEGORIES_EN[label] || label : label;
+  return CATEGORY_MAPS[lang]?.[label] || label;
 }
 
 const LangContext = createContext({ lang: "fr", setLang: () => {}, t: (k) => k });
 
+const LANGS = ["fr", "en", "es"];
+
 function initialLang() {
   try {
-    if (localStorage.lang === "en" || localStorage.lang === "fr") return localStorage.lang;
-    return (navigator.language || "fr").toLowerCase().startsWith("en") ? "en" : "fr";
+    if (LANGS.includes(localStorage.lang)) return localStorage.lang;
+    const nav = (navigator.language || "fr").toLowerCase();
+    if (nav.startsWith("en")) return "en";
+    if (nav.startsWith("es")) return "es";
+    return "fr";
   } catch {
     return "fr";
   }

@@ -1,16 +1,21 @@
-"""Localisation : remplace les champs par leur variante `_en` en mode anglais.
+"""Localisation : remplace les champs par leur variante traduite (`_en`, `_es`…).
 
-Repli automatique sur le français si la traduction est absente.
+Le français est la langue de base (colonnes sans suffixe). Pour toute autre
+langue `xx`, on substitue `row[f]` par `row[f+'_xx']` s'il existe et n'est pas
+vide. Repli automatique sur le français sinon.
 """
 
 EMPTY = (None, "", [], {})
 
+# Langues traduites disponibles (hors français de base).
+SUPPORTED = ("en", "es")
+
 
 def localize(row: dict, lang: str, fields: list[str]) -> dict:
-    """En anglais, remplace row[f] par row[f+'_en'] s'il existe et n'est pas vide."""
-    if lang == "en":
+    """Remplace row[f] par row[f+'_<lang>'] s'il existe et n'est pas vide."""
+    if lang in SUPPORTED:
         for f in fields:
-            value_en = row.get(f"{f}_en")
-            if value_en not in EMPTY:
-                row[f] = value_en
+            value = row.get(f"{f}_{lang}")
+            if value not in EMPTY:
+                row[f] = value
     return row
