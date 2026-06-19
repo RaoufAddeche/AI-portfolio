@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Github, Linkedin, Mail, Menu, X, Globe, Check } from "lucide-react";
+import { Github, Linkedin, Mail, Menu, X, ChevronDown } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { useLang } from "../i18n.jsx";
 import { SITE } from "../config.js";
@@ -33,10 +33,13 @@ function LangToggle() {
         aria-label="Changer de langue / Change language / Cambiar idioma"
         aria-haspopup="true"
         aria-expanded={open}
-        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-body transition-colors hover:bg-surface-2 hover:text-ink"
+        className="inline-flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-semibold text-body transition-colors hover:text-ink"
       >
-        <Globe className="h-4 w-4" strokeWidth={1.75} />
         {current.code.toUpperCase()}
+        <ChevronDown
+          className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+          strokeWidth={2}
+        />
       </button>
 
       {open && (
@@ -57,12 +60,11 @@ function LangToggle() {
                     setLang(l.code);
                     setOpen(false);
                   }}
-                  className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-sm transition-colors hover:bg-surface-2 ${
-                    l.code === lang ? "font-semibold text-accent" : "text-body hover:text-ink"
+                  className={`flex w-full items-center px-3 py-2 text-sm transition-colors hover:bg-surface-2 hover:text-ink ${
+                    l.code === lang ? "bg-surface-2 text-ink" : "text-body"
                   }`}
                 >
                   {l.label}
-                  {l.code === lang && <Check className="h-3.5 w-3.5" strokeWidth={2} />}
                 </button>
               </li>
             ))}
