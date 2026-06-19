@@ -4,6 +4,7 @@ Garde-fous anti-spam / protection du budget LLM :
 - rate-limit par IP (fenêtre glissante en mémoire) ;
 - plafond quotidien global d'appels (compté en base, robuste aux redémarrages).
 """
+import logging
 import time
 from collections import defaultdict, deque
 
@@ -18,8 +19,24 @@ from ..services import cv, llm
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
+logger = logging.getLogger(__name__)
+
 _WINDOW_SECONDS = 60.0
 _hits: dict[str, deque] = defaultdict(deque)
+
+# Réponse de repli si l'appel LLM échoue (réseau, quota OpenAI, etc.).
+# On reste poli et on renvoie le visiteur vers le contact direct.
+_LLM_FALLBACK = {
+    "fr": (
+        "Désolé, je n'arrive pas à répondre à l'instant — un souci technique côté "
+        "assistant. Vous pouvez réessayer dans un moment, ou contacter Raouf "
+        "directement via le formulaire de contact."
+    ),
+    "en": (
+        "Sorry, I can't answer right now — a technical hiccup on the assistant's side. "
+        "Please try again in a moment, or reach out to Raouf directly via the contact form."
+    ),
+}
 
 
 class ChatRequest(BaseModel):
@@ -125,8 +142,10 @@ async def chat(
     context = await _build_context(conn, req.lang)
     try:
         answer = await llm.answer_question(req.question, context, req.lang, req.history)
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=502, detail=f"LLM: {exc}") from exc
+    except Exception:  # noqa: BLE001
+        # On ne propage pas l'erreur au visiteur : message de repli propre (HTTP 200).
+        logger.exception("Échec de l'appel LLM dans le chatbot")
+        return {"answer": _LLM_FALLBACK.get(req.lang, _LLM_FALLBACK["fr"]), "fallback": True}
 
     try:
         await conn.execute(
