@@ -60,10 +60,9 @@ INSERT INTO timeline_events (date, end_date, title, description, category, tags,
  'formation', ARRAY['Machine Learning','IA générative','Python'], 4, TRUE),
 
 ('2025-09-01', NULL, 'Développeur IA — Midas / Mobivia',
- 'Conception d''un voicebot IA temps réel (Deepgram, Claude via AWS Bedrock, Cartesia, '
- 'Twilio, AWS ECS/DynamoDB) déployé en production sur centres pilotes. Outils d''assistance '
- 'développeur, contrôle qualité automatisé avant merge, agents de rétro-documentation et '
- 'MCP interne connecté aux APIs métiers.',
+ 'Conception et mise en production de solutions IA sur AWS : voicebot temps réel, agents et '
+ 'outils internes pour les développeurs. CI/CD, déploiement et sécurité de bout en bout. '
+ '(Détail dans les études de cas.)',
  'alternance', ARRAY['LLM','AWS','Voicebot','FastAPI'], 5, TRUE),
 
 ('2025-01-01', NULL, 'Certifications Microsoft Azure',
@@ -79,6 +78,7 @@ INSERT INTO skills (name, category, subcategory, proficiency_level, is_primary) 
 ('LLMs',               'technical', 'IA & Machine Learning', 5, TRUE),
 ('Prompt Engineering', 'technical', 'IA & Machine Learning', 5, TRUE),
 ('LangChain',          'technical', 'IA & Machine Learning', 4, TRUE),
+('MCP',                'technical', 'IA & Machine Learning', 4, TRUE),
 ('LangGraph',          'technical', 'IA & Machine Learning', 4, FALSE),
 ('PyTorch',            'technical', 'IA & Machine Learning', 3, FALSE),
 ('Scikit-learn',       'technical', 'IA & Machine Learning', 4, FALSE),
@@ -234,10 +234,9 @@ WHERE title = 'École Microsoft — Développeur Data / IA';
 
 UPDATE timeline_events SET
   title_en = 'AI Developer — Midas / Mobivia',
-  description_en = 'Built a real-time AI voicebot (Deepgram, Claude via AWS Bedrock, Cartesia, '
-    'Twilio, AWS ECS/DynamoDB) deployed in production across pilot centers. Developer-assistance '
-    'tools, automated pre-merge quality control, retro-documentation agents and an internal MCP '
-    'connected to business APIs.'
+  description_en = 'Design and production rollout of AI solutions on AWS: real-time voicebot, '
+    'agents and internal developer tools. End-to-end CI/CD, deployment and security. '
+    '(See the case studies for details.)'
 WHERE title = 'Développeur IA — Midas / Mobivia';
 
 UPDATE timeline_events SET
@@ -361,10 +360,9 @@ WHERE title = 'École Microsoft — Développeur Data / IA';
 
 UPDATE timeline_events SET
   title_es = 'Desarrollador de IA — Midas / Mobivia',
-  description_es = 'Diseño de un voicebot de IA en tiempo real (Deepgram, Claude vía AWS Bedrock, '
-    'Cartesia, Twilio, AWS ECS/DynamoDB) desplegado en producción en centros piloto. Herramientas '
-    'de asistencia al desarrollador, control de calidad automatizado antes del merge, agentes de '
-    'retro-documentación y un MCP interno conectado a las APIs del negocio.'
+  description_es = 'Diseño y puesta en producción de soluciones de IA en AWS: voicebot en tiempo '
+    'real, agentes y herramientas internas para desarrolladores. CI/CD, despliegue y seguridad de '
+    'extremo a extremo. (Detalles en los casos de éxito.)'
 WHERE title = 'Développeur IA — Midas / Mobivia';
 
 UPDATE timeline_events SET
