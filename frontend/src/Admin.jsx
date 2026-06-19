@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Check, EyeOff, Trash2, Mail, Star, FolderGit2, LogOut } from "lucide-react";
+import {
+  Check, EyeOff, Trash2, Mail, Star, FolderGit2, LogOut, BarChart3,
+  Eye, Users, Download, MousePointerClick, MessageCircle, Clock, ChevronsDown,
+} from "lucide-react";
 
 const api = (path, token, opts = {}) =>
   fetch(`/api/admin${path}`, {
@@ -11,7 +14,7 @@ export default function Admin() {
   const [token, setToken] = useState(() => sessionStorage.getItem("adminToken") || "");
   const [authed, setAuthed] = useState(false);
   const [cats, setCats] = useState([]);
-  const [tab, setTab] = useState("projets");
+  const [tab, setTab] = useState("analytics");
   const [error, setError] = useState("");
 
   const tryAuth = useCallback(async (raw) => {
@@ -67,6 +70,7 @@ export default function Admin() {
   }
 
   const TABS = [
+    { id: "analytics", label: "Analytics", Icon: BarChart3 },
     { id: "projets", label: "Projets", Icon: FolderGit2 },
     { id: "avis", label: "Avis", Icon: Star },
     { id: "messages", label: "Messages", Icon: Mail },
@@ -97,6 +101,7 @@ export default function Admin() {
       </header>
 
       <main className="container-page py-8">
+        {tab === "analytics" && <Analytics token={token} />}
         {tab === "projets" && <Projects token={token} cats={cats} />}
         {tab === "avis" && <Reviews token={token} />}
         {tab === "messages" && <Messages token={token} />}
@@ -119,6 +124,146 @@ function useList(path, token) {
     reload();
   }, [reload]);
   return { items, loading, reload };
+}
+
+function Analytics({ token }) {
+  const [days, setDays] = useState(30);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    api(`/analytics?days=${days}`, token)
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, [days, token]);
+
+  const fmtTime = (s) => (s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`);
+  const PERIODS = [
+    { v: 7, label: "7 j" },
+    { v: 30, label: "30 j" },
+    { v: 90, label: "90 j" },
+  ];
+
+  if (loading && !data) return <p className="text-sm text-muted">Chargement…</p>;
+  if (!data) return <p className="text-sm text-red-600">Impossible de charger les analytics.</p>;
+
+  const cards = [
+    { label: "Visites", value: data.sessions, Icon: Users },
+    { label: "Pages vues", value: data.page_views, Icon: Eye },
+    { label: "Clics projets", value: data.project_clicks, Icon: MousePointerClick },
+    { label: "Téléchargements CV", value: data.cv_downloads, Icon: Download },
+    { label: "Messages reçus", value: data.contacts, Icon: Mail },
+    { label: "Chatbot ouvert", value: data.chat_opens, Icon: MessageCircle },
+    { label: "Questions au chatbot", value: data.chat_messages, Icon: MessageCircle },
+    { label: "Temps moyen / visite", value: fmtTime(data.avg_time_seconds), Icon: Clock },
+    { label: "Scroll moyen", value: `${data.avg_scroll_pct} %`, Icon: ChevronsDown },
+  ];
+
+  const maxViews = Math.max(1, ...data.daily.map((d) => d.views));
+  const maxClicks = Math.max(1, ...data.top_projects.map((p) => p.clicks));
+
+  return (
+    <div className="space-y-8">
+      {/* Sélecteur de période */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted">
+          Données anonymes (sans cookie), regroupées par visite.
+        </p>
+        <div className="flex gap-1 rounded-lg border border-line p-1">
+          {PERIODS.map((p) => (
+            <button
+              key={p.v}
+              onClick={() => setDays(p.v)}
+              className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                days === p.v ? "bg-accent text-white" : "text-body hover:text-ink"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Cartes de stats */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3">
+        {cards.map(({ label, value, Icon }) => (
+          <div key={label} className="card">
+            <div className="flex items-center gap-2 text-muted">
+              <Icon className="h-4 w-4" strokeWidth={1.75} />
+              <span className="text-xs">{label}</span>
+            </div>
+            <p className="mt-2 text-2xl font-bold text-ink">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Pages vues par jour */}
+      <div className="card">
+        <h3 className="text-sm font-semibold text-ink">Pages vues par jour</h3>
+        {data.daily.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">Aucune donnée sur la période.</p>
+        ) : (
+          <div className="mt-4 flex h-40 items-end gap-1">
+            {data.daily.map((d) => (
+              <div key={d.day} className="group flex flex-1 flex-col items-center justify-end">
+                <div
+                  className="w-full rounded-t bg-accent/80 transition-colors group-hover:bg-accent"
+                  style={{ height: `${(d.views / maxViews) * 100}%` }}
+                  title={`${d.day} · ${d.views} vues`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Top projets + référents */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="card">
+          <h3 className="text-sm font-semibold text-ink">Projets les plus cliqués</h3>
+          {data.top_projects.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">Aucun clic pour l'instant.</p>
+          ) : (
+            <ul className="mt-4 space-y-2.5">
+              {data.top_projects.map((p) => (
+                <li key={p.label}>
+                  <div className="flex justify-between text-sm">
+                    <span className="truncate text-body">{p.label}</span>
+                    <span className="ml-2 shrink-0 font-medium text-ink">{p.clicks}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 rounded-full bg-surface-2">
+                    <div
+                      className="h-full rounded-full bg-accent"
+                      style={{ width: `${(p.clicks / maxClicks) * 100}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="card">
+          <h3 className="text-sm font-semibold text-ink">Sources de trafic</h3>
+          {data.top_referrers.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">Aucune donnée sur la période.</p>
+          ) : (
+            <ul className="mt-4 space-y-2 text-sm">
+              {data.top_referrers.map((r) => (
+                <li key={r.referrer} className="flex justify-between">
+                  <span className="truncate text-body">{r.referrer}</span>
+                  <span className="ml-2 shrink-0 font-medium text-ink">{r.count}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function Projects({ token, cats }) {

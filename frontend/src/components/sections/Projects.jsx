@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowUpRight, Star, GitFork } from "lucide-react";
 import { SectionHead } from "./Timeline";
 import { useLang, translateCategory } from "../../i18n.jsx";
+import { track } from "../../analytics.js";
 
 const ALL = "__all__";
 
@@ -76,6 +77,14 @@ function ProjectCard({ project: p, lang }) {
       href={p.github_url}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() =>
+        track("project_click", {
+          event_category: "engagement",
+          event_label: p.title,
+          target_type: "project",
+          target_id: p.id,
+        })
+      }
       className="card group flex flex-col"
     >
       <div className="flex items-start justify-between gap-3">
