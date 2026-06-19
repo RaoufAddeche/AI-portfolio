@@ -64,10 +64,10 @@ export default function App() {
       <Navbar name={data.profile?.full_name} social={data.social} />
       <main>
         <Hero profile={data.profile} social={data.social} loading={loading} />
+        <Skills skills={data.skills} />
         <CaseStudies studies={data.caseStudies} />
         <Projects projects={data.projects} />
         <Timeline events={data.timeline} />
-        <Skills skills={data.skills} />
         <Testimonials testimonials={data.testimonials} />
         <Contact profile={data.profile} social={data.social} />
       </main>

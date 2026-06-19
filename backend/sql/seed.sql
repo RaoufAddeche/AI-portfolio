@@ -90,6 +90,7 @@ INSERT INTO skills (name, category, subcategory, proficiency_level, is_primary) 
 -- Cloud & DevOps
 ('AWS',                'technical', 'Cloud & DevOps', 4, TRUE),
 ('Docker',             'technical', 'Cloud & DevOps', 4, TRUE),
+('Terraform',          'technical', 'Cloud & DevOps', 3, FALSE),
 ('Git',                'technical', 'Cloud & DevOps', 5, FALSE),
 ('Prometheus / Grafana','technical','Cloud & DevOps', 3, FALSE),
 -- IA conversationnelle & temps réel
@@ -106,6 +107,8 @@ INSERT INTO skills (name, category, subcategory, proficiency_level, is_primary) 
 ('React',              'technical', 'Frontend & Interfaces', 4, FALSE),
 ('Tailwind CSS',       'technical', 'Frontend & Interfaces', 4, FALSE),
 ('Streamlit',          'technical', 'Frontend & Interfaces', 4, FALSE),
+-- Dataviz & BI
+('Power BI',           'technical', 'Dataviz & BI', 4, FALSE),
 -- Atouts métier
 ('Vulgarisation technique', 'business', 'Atouts métier', 5, TRUE),
 ('Compréhension métier',    'business', 'Atouts métier', 5, TRUE),
@@ -249,6 +252,7 @@ UPDATE skills SET subcategory_en = 'Cloud & DevOps'          WHERE subcategory =
 UPDATE skills SET subcategory_en = 'Conversational AI'       WHERE subcategory = 'IA conversationnelle';
 UPDATE skills SET subcategory_en = 'Data & Databases'        WHERE subcategory = 'Data & Bases de données';
 UPDATE skills SET subcategory_en = 'Frontend & Interfaces'   WHERE subcategory = 'Frontend & Interfaces';
+UPDATE skills SET subcategory_en = 'Data Viz & BI'           WHERE subcategory = 'Dataviz & BI';
 UPDATE skills SET subcategory_en = 'Soft Skills'             WHERE subcategory = 'Atouts métier';
 
 -- Noms des compétences non techniques (les technos restent identiques -> repli FR)
@@ -375,6 +379,7 @@ UPDATE skills SET subcategory_es = 'Cloud y DevOps'             WHERE subcategor
 UPDATE skills SET subcategory_es = 'IA conversacional'          WHERE subcategory = 'IA conversationnelle';
 UPDATE skills SET subcategory_es = 'Datos y bases de datos'     WHERE subcategory = 'Data & Bases de données';
 UPDATE skills SET subcategory_es = 'Frontend e interfaces'      WHERE subcategory = 'Frontend & Interfaces';
+UPDATE skills SET subcategory_es = 'Visualización de datos y BI' WHERE subcategory = 'Dataviz & BI';
 UPDATE skills SET subcategory_es = 'Competencias transversales' WHERE subcategory = 'Atouts métier';
 
 -- Nombres de competencias no técnicas (las tecnologías quedan igual -> repli FR)

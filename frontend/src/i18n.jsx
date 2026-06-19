@@ -40,6 +40,7 @@ const STRINGS = {
     "skills.title": "Stack & savoir-faire",
     "skills.description":
       "Outils et technologies que j’utilise au quotidien, du prototypage à la mise en production.",
+    "skills.core": "Cœur de stack",
 
     "contact.overline": "Contact",
     "contact.title": "Travaillons ensemble",
@@ -123,6 +124,7 @@ const STRINGS = {
     "skills.title": "Stack & expertise",
     "skills.description":
       "Tools and technologies I use daily, from prototyping to production.",
+    "skills.core": "Core stack",
 
     "contact.overline": "Contact",
     "contact.title": "Let’s work together",
@@ -206,6 +208,7 @@ const STRINGS = {
     "skills.title": "Stack y experiencia",
     "skills.description":
       "Herramientas y tecnologías que uso a diario, del prototipo a la producción.",
+    "skills.core": "Stack principal",
 
     "contact.overline": "Contacto",
     "contact.title": "Trabajemos juntos",
