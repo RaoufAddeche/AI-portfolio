@@ -1,6 +1,7 @@
 import { ArrowRight, Download, MapPin, Briefcase, GraduationCap, Dot } from "lucide-react";
 import { useLang } from "../../i18n.jsx";
 import { SITE } from "../../config.js";
+import { track } from "../../analytics.js";
 
 const FACT_ICONS = { briefcase: Briefcase, school: GraduationCap, pin: MapPin };
 
@@ -53,7 +54,12 @@ export default function Hero({ profile, loading }) {
             <a href="#projets" className="btn-primary">
               {t("hero.cta_projects")} <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </a>
-            <a href={`/${SITE.cvFile[lang]}`} download className="btn-outline">
+            <a
+              href={`/${SITE.cvFile[lang] || SITE.cvFile.fr}`}
+              download
+              onClick={() => track("cv_download", { event_label: lang })}
+              className="btn-outline"
+            >
               <Download className="h-4 w-4" strokeWidth={1.75} /> {t("hero.cta_cv")}
             </a>
             <a href="#contact" className="btn-ghost">
@@ -68,7 +74,11 @@ export default function Hero({ profile, loading }) {
             {profile.photo_url ? (
               <img
                 src={profile.photo_url}
-                alt={profile.full_name}
+                alt={profile.title ? `${profile.full_name} — ${profile.title}` : profile.full_name}
+                width="288"
+                height="288"
+                fetchPriority="high"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             ) : (

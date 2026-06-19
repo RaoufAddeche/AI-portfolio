@@ -10,6 +10,7 @@ import Contact from "./components/sections/Contact";
 import Footer from "./components/Footer";
 import ChatWidget from "./components/ChatWidget";
 import { useLang } from "./i18n.jsx";
+import { track } from "./analytics.js";
 
 const json = (r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)));
 
@@ -25,6 +26,11 @@ export default function App() {
     testimonials: [],
   });
   const [loading, setLoading] = useState(true);
+
+  // Une seule vue de page par visite (le re-render au changement de langue ne compte pas).
+  useEffect(() => {
+    track("page_view");
+  }, []);
 
   useEffect(() => {
     setLoading(true);

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Github, Linkedin, Mail, MapPin, Send, Check } from "lucide-react";
 import { useLang } from "../../i18n.jsx";
+import { track } from "../../analytics.js";
 
 const ICONS = { github: Github, linkedin: Linkedin, email: Mail };
 
@@ -22,6 +23,7 @@ export default function Contact({ profile, social = [] }) {
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
       setStatus("sent");
+      track("contact");
       setForm({ name: "", email: "", subject: "", message: "" });
     } catch {
       setStatus("error");
