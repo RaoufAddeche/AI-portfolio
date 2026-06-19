@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Github, Linkedin, Mail, Menu, X, Languages, Check } from "lucide-react";
+import { Github, Linkedin, Mail, Menu, X, Globe, Check } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { useLang } from "../i18n.jsx";
 import { SITE } from "../config.js";
@@ -35,7 +35,7 @@ function LangToggle() {
         aria-expanded={open}
         className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-body transition-colors hover:bg-surface-2 hover:text-ink"
       >
-        <Languages className="h-4 w-4" strokeWidth={1.75} />
+        <Globe className="h-4 w-4" strokeWidth={1.75} />
         {current.code.toUpperCase()}
       </button>
 
