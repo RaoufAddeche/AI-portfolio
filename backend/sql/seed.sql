@@ -443,3 +443,128 @@ UPDATE case_studies SET
     'Uso de IA centralizado y enriquecido mediante un MCP interno'
   ]
 WHERE slug = 'outils-ia-developpeurs';
+
+-- =====================================================================
+-- 3e ÉTUDE DE CAS (agent support) + OWNERSHIP PROD sur les cas existants
+-- Bloc idempotent (INSERT-if-not-exists + overwrite) — FR/EN/ES.
+-- =====================================================================
+
+INSERT INTO case_studies
+  (slug, title, subtitle, company, role, period, summary, problem, approach,
+   architecture, stack, results, tags, display_order)
+SELECT
+  'agent-ia-support',
+  $x$Agent IA d'assistance au support$x$,
+  $x$Triage et résolution assistée des tickets FreshService chez Midas$x$,
+  $x$Midas / Mobivia$x$,
+  $x$Développeur IA$x$,
+  $x$2026 — présent$x$,
+  $x$Un agent IA intégré à Claude Code qui, à partir d'un ID de ticket FreshService, agrège ticket, base de connaissances, code et tickets similaires, puis trie (N1/N2/N3) et propose une piste de résolution sourcée — en lecture seule, le développeur valide.$x$,
+  $x$Traiter un ticket de support est chronophage : comprendre la demande, juger son niveau, retrouver le bon article de la base de connaissances ou fouiller le code, repérer les cas déjà résolus. D'où du temps perdu et des réponses hétérogènes d'un développeur à l'autre.$x$,
+  $x$Un package Python qui transforme Claude Code en assistant de support. Une slash command « /ticket <id> » orchestre quatre serveurs MCP maison en lecture seule (FreshService pour les tickets et la base de connaissances, GitLab pour les quatre applications Midas, Git et système de fichiers pour le code local) ainsi que des sous-agents dédiés. Un scoring déterministe en Python évalue la complétude du ticket et les signaux de niveau ; le LLM décide N1/N2/N3 et rédige : renvoi vers la base de connaissances en N1, piste de résolution sourcée en N2/N3, ou « challenge » lorsque le ticket est trop pauvre. Un index sémantique local des tickets clôturés retrouve les cas similaires, rafraîchi chaque nuit. CI/CD sur GitLab et distribution interne via pipx.$x$,
+  $x$[
+    {"step": "Ticket (ID)", "tech": "FreshService"},
+    {"step": "Agrégation : ticket, KB, code, similaires", "tech": "MCP (FreshService/GitLab/Git/FS)"},
+    {"step": "Scoring & signaux de niveau", "tech": "Python (déterministe)"},
+    {"step": "Décision N1/N2/N3 & rédaction", "tech": "Claude Code"},
+    {"step": "Proposition sourcée — le dev valide", "tech": "Human-in-the-loop"}
+   ]$x$::jsonb,
+  ARRAY['Python','Claude Code','MCP','FreshService API','GitLab','SQLite','Embeddings','GitLab CI','pipx'],
+  ARRAY[
+    $x$Triage N1/N2/N3 automatisé, avec réponse sourcée (KB, code, tickets similaires)$x$,
+    $x$Quatre serveurs MCP maison (FreshService, GitLab, Git, Filesystem) en lecture seule$x$,
+    $x$Lecture seule et human-in-the-loop : le développeur garde le contrôle$x$,
+    $x$CI/CD GitLab et distribution interne via pipx ; mise en production visée au T3 2026$x$
+  ],
+  ARRAY['IA Agentique','Developer Tooling','MCP','Support'],
+  3
+WHERE NOT EXISTS (SELECT 1 FROM case_studies WHERE slug = 'agent-ia-support');
+
+UPDATE case_studies SET
+  title_en = $x$AI support-desk assistant$x$,
+  subtitle_en = $x$Triage and assisted resolution of FreshService tickets at Midas$x$,
+  summary_en = $x$An AI agent embedded in Claude Code that, from a FreshService ticket ID, aggregates the ticket, knowledge base, code and similar tickets, then triages (L1/L2/L3) and proposes a sourced resolution path — read-only, the developer validates.$x$,
+  problem_en = $x$Handling a support ticket is time-consuming: understanding the request, judging its level, finding the right KB article or digging through code, spotting already-solved cases. Hence wasted time and inconsistent answers from one developer to another.$x$,
+  approach_en = $x$A Python package that turns Claude Code into a support assistant. A "/ticket <id>" slash command orchestrates four in-house read-only MCP servers (FreshService for tickets and the knowledge base, GitLab for the four Midas apps, Git and the filesystem for local code) along with dedicated sub-agents. Deterministic Python scoring assesses ticket completeness and level signals; the LLM decides L1/L2/L3 and writes the answer: redirect to the KB for L1, a sourced resolution path for L2/L3, or a "challenge" when the ticket is too thin. A local semantic index of closed tickets retrieves similar cases, refreshed nightly. CI/CD on GitLab and internal distribution via pipx.$x$,
+  architecture_en = $x$[
+    {"step": "Ticket (ID)", "tech": "FreshService"},
+    {"step": "Aggregation: ticket, KB, code, similar", "tech": "MCP (FreshService/GitLab/Git/FS)"},
+    {"step": "Scoring & level signals", "tech": "Python (deterministic)"},
+    {"step": "L1/L2/L3 decision & drafting", "tech": "Claude Code"},
+    {"step": "Sourced proposal — the dev validates", "tech": "Human-in-the-loop"}
+   ]$x$::jsonb,
+  results_en = ARRAY[
+    $x$Automated L1/L2/L3 triage with a sourced answer (KB, code, similar tickets)$x$,
+    $x$Four in-house read-only MCP servers (FreshService, GitLab, Git, Filesystem)$x$,
+    $x$Read-only and human-in-the-loop: the developer stays in control$x$,
+    $x$GitLab CI/CD and internal pipx distribution; production rollout targeted Q3 2026$x$
+  ],
+  title_es = $x$Agente de IA para el soporte$x$,
+  subtitle_es = $x$Triaje y resolución asistida de tickets de FreshService en Midas$x$,
+  summary_es = $x$Un agente de IA integrado en Claude Code que, a partir del ID de un ticket de FreshService, agrega el ticket, la base de conocimiento, el código y los tickets similares, luego clasifica (N1/N2/N3) y propone una vía de resolución documentada — en solo lectura, el desarrollador valida.$x$,
+  problem_es = $x$Tratar un ticket de soporte lleva tiempo: entender la solicitud, juzgar su nivel, encontrar el artículo adecuado de la base de conocimiento o rebuscar en el código, detectar los casos ya resueltos. De ahí el tiempo perdido y respuestas heterogéneas de un desarrollador a otro.$x$,
+  approach_es = $x$Un paquete Python que convierte Claude Code en un asistente de soporte. Un slash command «/ticket <id>» orquesta cuatro servidores MCP propios en solo lectura (FreshService para los tickets y la base de conocimiento, GitLab para las cuatro aplicaciones de Midas, Git y sistema de archivos para el código local) junto con subagentes dedicados. Un scoring determinista en Python evalúa la completitud del ticket y las señales de nivel; el LLM decide N1/N2/N3 y redacta: derivación a la base de conocimiento en N1, una vía de resolución documentada en N2/N3, o un «challenge» cuando el ticket es demasiado pobre. Un índice semántico local de los tickets cerrados recupera los casos similares, actualizado cada noche. CI/CD en GitLab y distribución interna mediante pipx.$x$,
+  architecture_es = $x$[
+    {"step": "Ticket (ID)", "tech": "FreshService"},
+    {"step": "Agregación: ticket, KB, código, similares", "tech": "MCP (FreshService/GitLab/Git/FS)"},
+    {"step": "Scoring y señales de nivel", "tech": "Python (determinista)"},
+    {"step": "Decisión N1/N2/N3 y redacción", "tech": "Claude Code"},
+    {"step": "Propuesta documentada — el dev valida", "tech": "Human-in-the-loop"}
+   ]$x$::jsonb,
+  results_es = ARRAY[
+    $x$Triaje N1/N2/N3 automatizado, con respuesta documentada (KB, código, tickets similares)$x$,
+    $x$Cuatro servidores MCP propios en solo lectura (FreshService, GitLab, Git, Filesystem)$x$,
+    $x$Solo lectura y human-in-the-loop: el desarrollador mantiene el control$x$,
+    $x$CI/CD en GitLab y distribución interna vía pipx; puesta en producción prevista para el T3 2026$x$
+  ]
+WHERE slug = 'agent-ia-support';
+
+UPDATE case_studies SET
+  stack = ARRAY['Python','Twilio','Deepgram','AWS Bedrock','Claude Sonnet','Cartesia','AWS ECS','DynamoDB','GitLab CI'],
+  results = ARRAY[
+    $x$Déployé en production sur centres pilotes$x$,
+    $x$Qualification client automatisée des appels manqués$x$,
+    $x$Architecture temps réel à faible latence (STT → LLM → TTS)$x$,
+    $x$CI/CD (GitLab), déploiement AWS, gestion des secrets et sécurité applicative de bout en bout$x$,
+    $x$Objectif d'industrialisation à l'échelle nationale et européenne$x$
+  ],
+  results_en = ARRAY[
+    $x$Deployed in production across pilot centers$x$,
+    $x$Automated customer qualification of missed calls$x$,
+    $x$Low-latency real-time architecture (STT → LLM → TTS)$x$,
+    $x$End-to-end ownership of CI/CD (GitLab), AWS deployment, secrets management and application security$x$,
+    $x$Targeting nationwide and European industrialization$x$
+  ],
+  results_es = ARRAY[
+    $x$Desplegado en producción en centros piloto$x$,
+    $x$Cualificación automatizada de clientes en las llamadas perdidas$x$,
+    $x$Arquitectura en tiempo real de baja latencia (STT → LLM → TTS)$x$,
+    $x$CI/CD (GitLab), despliegue en AWS, gestión de secretos y seguridad de la aplicación de extremo a extremo$x$,
+    $x$Objetivo de industrialización a escala nacional y europea$x$
+  ]
+WHERE slug = 'voicebot-ia-temps-reel';
+
+UPDATE case_studies SET
+  stack = ARRAY['Python','LLMs','MCP','GitHub Copilot','Claude Code','Prompt Engineering','GitLab CI'],
+  results = ARRAY[
+    $x$Détection automatique des conventions manquantes et anomalies avant merge$x$,
+    $x$Documentation automatique d'un code legacy non documenté$x$,
+    $x$Accompagnement de la migration VB.NET → Angular/C#$x$,
+    $x$CI/CD GitLab et sécurité intégrées au cycle de développement$x$,
+    $x$Usages IA centralisés et enrichis via un MCP interne$x$
+  ],
+  results_en = ARRAY[
+    $x$Automatic detection of missing conventions and anomalies before merge$x$,
+    $x$Automatic documentation of undocumented legacy code$x$,
+    $x$Support for the VB.NET → Angular/C# migration$x$,
+    $x$GitLab CI/CD and security woven into the development lifecycle$x$,
+    $x$AI usage centralized and enriched via an internal MCP$x$
+  ],
+  results_es = ARRAY[
+    $x$Detección automática de convenciones ausentes y anomalías antes del merge$x$,
+    $x$Documentación automática de un código legacy no documentado$x$,
+    $x$Apoyo a la migración VB.NET → Angular/C#$x$,
+    $x$CI/CD en GitLab y seguridad integradas en el ciclo de desarrollo$x$,
+    $x$Uso de IA centralizado y enriquecido mediante un MCP interno$x$
+  ]
+WHERE slug = 'outils-ia-developpeurs';
