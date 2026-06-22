@@ -8,13 +8,15 @@ de colonnes par table — aucune injection de nom de colonne possible.
 """
 import json
 from datetime import date, datetime
+from pathlib import Path
 
 import asyncpg
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from ..db import get_db
 from ..security import require_admin
 from ..services import cv, llm
+from ..uploads import ensure_uploads_dir
 
 router = APIRouter(prefix="/api/admin", tags=["admin-content"], dependencies=[Depends(require_admin)])
 
@@ -102,7 +104,7 @@ PROFILE = Spec(
     "profile",
     columns=[
         "full_name", "email", "phone", "linkedin_url", "github_url",
-        "kaggle_url", "photo_url", "location",
+        "kaggle_url", "photo_url", "location", "cv_url_fr", "cv_url_en",
         *_i18n("title", "en", "es"), *_i18n("bio", "en", "es"),
         *_i18n("hero_pitch", "en", "es"), *_i18n("availability", "en", "es"),
     ],
@@ -253,6 +255,36 @@ async def update_profile(payload: dict, conn: asyncpg.Connection = Depends(get_d
     if not row:
         raise HTTPException(status_code=404, detail="Profil introuvable")
     return PROFILE.decode(row)
+
+
+# --- Upload de fichiers (photo, CV) -------------------------------------------
+# kind -> (nom de fichier canonique, extensions autorisées). Noms fixes : un
+# nouvel upload écrase l'ancien (le CV du chatbot lit cv-fr.pdf sur disque).
+_UPLOAD_KINDS = {
+    "photo": ("photo", {".jpg", ".jpeg", ".png", ".webp"}),
+    "cv_fr": ("cv-fr", {".pdf"}),
+    "cv_en": ("cv-en", {".pdf"}),
+}
+_MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 Mo
+
+
+@router.post("/upload")
+async def upload_file(kind: str = Form(...), file: UploadFile = File(...)):
+    """Enregistre un fichier (photo/CV) sur le volume et renvoie son URL publique."""
+    conf = _UPLOAD_KINDS.get(kind)
+    if not conf:
+        raise HTTPException(status_code=400, detail="Type d'upload inconnu")
+    name, exts = conf
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in exts:
+        raise HTTPException(status_code=415, detail=f"Extension autorisée : {', '.join(sorted(exts))}")
+    content = await file.read()
+    if len(content) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Fichier trop volumineux (max 5 Mo)")
+    filename = f"{name}{ext}"
+    (ensure_uploads_dir() / filename).write_bytes(content)
+    # ?v=taille : casse le cache navigateur quand le fichier change (nom fixe).
+    return {"url": f"/api/uploads/{filename}?v={len(content)}"}
 
 
 # --- Compétences --------------------------------------------------------------

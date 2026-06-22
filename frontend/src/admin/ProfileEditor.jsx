@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
-import { adminApi, I18nField, TextField, LangSwitch, Flash, useFlash } from "./lib.jsx";
+import { adminApi, I18nField, TextField, LangSwitch, Flash, useFlash, UploadButton } from "./lib.jsx";
 
 export default function ProfileEditor({ token }) {
   const [draft, setDraft] = useState(null);
@@ -88,6 +88,48 @@ export default function ProfileEditor({ token }) {
           <TextField label="GitHub" name="github_url" record={draft} set={set} />
           <TextField label="Kaggle" name="kaggle_url" record={draft} set={set} />
           <TextField label="Photo (URL)" name="photo_url" record={draft} set={set} />
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <UploadButton
+            token={token}
+            kind="photo"
+            accept="image/*"
+            label="Téléverser une photo"
+            onUploaded={(url) => set("photo_url", url)}
+          />
+          {draft.photo_url && (
+            <img src={draft.photo_url} alt="" className="h-12 w-12 rounded-lg object-cover" />
+          )}
+        </div>
+      </div>
+
+      <div className="card space-y-4">
+        <h3 className="text-sm font-semibold text-ink">CV (PDF)</h3>
+        <p className="text-xs text-muted">
+          Le CV téléversé alimente le bouton « Télécharger le CV » et la base de
+          connaissance du chatbot.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            { kind: "cv_fr", field: "cv_url_fr", label: "CV français" },
+            { kind: "cv_en", field: "cv_url_en", label: "CV anglais" },
+          ].map(({ kind, field, label }) => (
+            <div key={kind} className="space-y-2">
+              <span className="block text-xs font-medium text-muted">{label}</span>
+              <UploadButton
+                token={token}
+                kind={kind}
+                accept="application/pdf"
+                label="Téléverser le PDF"
+                onUploaded={(url) => set(field, url)}
+              />
+              {draft[field] && (
+                <a href={draft[field]} target="_blank" rel="noreferrer" className="block text-xs text-accent">
+                  Voir le fichier actuel
+                </a>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 

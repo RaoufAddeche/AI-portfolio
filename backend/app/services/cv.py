@@ -12,9 +12,21 @@ import httpx
 from pypdf import PdfReader
 
 from ..config import get_settings
+from ..uploads import UPLOADS_DIR
 
 _TTL = 3600.0  # re-vérifie le CV au plus une fois par heure
 _cache: dict = {"text": "", "ts": 0.0}
+
+
+async def _fetch_pdf_bytes() -> bytes | None:
+    """CV uploadé depuis l'admin (prioritaire), sinon fichier statique (cv_url)."""
+    uploaded = UPLOADS_DIR / "cv-fr.pdf"
+    if uploaded.is_file():
+        return uploaded.read_bytes()
+    async with httpx.AsyncClient(timeout=8) as client:
+        resp = await client.get(get_settings().cv_url)
+        resp.raise_for_status()
+        return resp.content
 
 
 def _clean(text: str) -> str:
@@ -42,14 +54,13 @@ async def get_cv_text() -> str:
     if _cache["text"] and now - _cache["ts"] < _TTL:
         return _cache["text"]
     try:
-        async with httpx.AsyncClient(timeout=8) as client:
-            resp = await client.get(get_settings().cv_url)
-            resp.raise_for_status()
-        reader = PdfReader(io.BytesIO(resp.content))
-        text = _clean("\n".join((page.extract_text() or "") for page in reader.pages).strip())
-        if text:
-            _cache["text"] = text
-            _cache["ts"] = now
+        content = await _fetch_pdf_bytes()
+        if content:
+            reader = PdfReader(io.BytesIO(content))
+            text = _clean("\n".join((page.extract_text() or "") for page in reader.pages).strip())
+            if text:
+                _cache["text"] = text
+                _cache["ts"] = now
     except Exception:  # noqa: BLE001 (réseau/PDF) : on garde le dernier connu
         pass
     return _cache["text"]

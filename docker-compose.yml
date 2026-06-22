@@ -47,6 +47,8 @@ services:
       - CONTACT_FROM=${CONTACT_FROM:-Portfolio <onboarding@resend.dev>}
       - ADMIN_TOKEN=${ADMIN_TOKEN:-}
       - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-http://localhost:8000}
+    volumes:
+      - ./volumes/uploads:/app/uploads   # photo & CV uploadés depuis l'admin (persistant)
     ports:
       - "8000:8000"
     depends_on:

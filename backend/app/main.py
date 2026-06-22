@@ -3,9 +3,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
 from .db import close_pool, init_pool
+from .uploads import ensure_uploads_dir
 from .routers import (
     admin,
     admin_content,
@@ -75,6 +77,9 @@ def create_app() -> FastAPI:
         admin_content,
     ):
         app.include_router(module.router)
+
+    # Fichiers uploadés (photo, CV) servis sous /api/uploads (proxyfié par nginx).
+    app.mount("/api/uploads", StaticFiles(directory=ensure_uploads_dir()), name="uploads")
 
     return app
 

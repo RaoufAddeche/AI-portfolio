@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Trash2, Save, ChevronDown, ChevronRight, X } from "lucide-react";
+import { Plus, Trash2, Save, ChevronDown, ChevronRight, X, Upload } from "lucide-react";
 
 // Appel à l'API admin (toujours avec le token).
 export const adminApi = (path, token, opts = {}) =>
@@ -34,6 +34,48 @@ export function LangSwitch({ lang, setLang }) {
         </button>
       ))}
     </div>
+  );
+}
+
+// Bouton de téléversement (multipart). Renvoie l'URL publique via onUploaded.
+export function UploadButton({ token, kind, accept, label = "Téléverser", onUploaded }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const onChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    setErr("");
+    try {
+      const fd = new FormData();
+      fd.append("kind", kind);
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "X-Admin-Token": token }, // pas de Content-Type : le navigateur gère le boundary
+        body: fd,
+      });
+      if (!res.ok) {
+        const er = await res.json().catch(() => ({}));
+        throw new Error(er.detail || "Échec de l'upload");
+      }
+      const { url } = await res.json();
+      onUploaded(url);
+    } catch (e2) {
+      setErr(e2.message);
+    } finally {
+      setBusy(false);
+      e.target.value = "";
+    }
+  };
+  return (
+    <span className="inline-flex items-center gap-2">
+      <label className="btn-outline cursor-pointer text-sm">
+        <Upload className="h-4 w-4" strokeWidth={1.75} /> {busy ? "Envoi…" : label}
+        <input type="file" accept={accept} className="hidden" onChange={onChange} disabled={busy} />
+      </label>
+      {err && <span className="text-xs text-red-600">{err}</span>}
+    </span>
   );
 }
 

@@ -55,7 +55,10 @@ export default function Hero({ profile, loading }) {
               {t("hero.cta_projects")} <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </a>
             <a
-              href={`/${SITE.cvFile[lang] || SITE.cvFile.fr}`}
+              href={
+                (lang === "en" ? profile.cv_url_en : profile.cv_url_fr) ||
+                `/${SITE.cvFile[lang] || SITE.cvFile.fr}`
+              }
               download
               onClick={() => track("cv_download", { event_label: lang })}
               className="btn-outline"
