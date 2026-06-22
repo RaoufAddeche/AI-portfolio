@@ -12,7 +12,7 @@ export const SITE = {
   // alors automatiquement sur le CV FR (évite un lien cassé / 404).
   cvFile: {
     fr: "cv-raouf-addeche-fr.pdf",
-    en: null, // TODO : ajouter "cv-raouf-addeche-en.pdf" dans public/ une fois rédigé
+    en: "cv-raouf-addeche-en.pdf",
   },
 
   // ── SEO ── Tout ce qui finit dans le <head>, robots.txt et sitemap.xml est
