@@ -14,8 +14,24 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from ..db import get_db
 from ..security import require_admin
+from ..services import cv, llm
 
 router = APIRouter(prefix="/api/admin", tags=["admin-content"], dependencies=[Depends(require_admin)])
+
+
+def _parse_date(value):
+    """Tolère 'YYYY', 'YYYY-MM' et 'YYYY-MM-DD' (le LLM peut ne connaître que l'année)."""
+    if not value:
+        return None
+    parts = str(value).strip().split("-")
+    try:
+        if len(parts) == 1:
+            return date(int(parts[0]), 1, 1)
+        if len(parts) == 2:
+            return date(int(parts[0]), int(parts[1]), 1)
+        return date.fromisoformat(str(value).strip())
+    except (ValueError, TypeError):
+        return None
 
 
 # --- Spécification des colonnes éditables par table ---------------------------
@@ -42,7 +58,7 @@ class Spec:
         if col in self.arrays:
             return list(value) if value else []
         if col in self.dates:
-            return date.fromisoformat(value) if value else None
+            return _parse_date(value)
         if col in self.ints:
             return int(value) if value not in (None, "") else None
         if col in self.floats:
@@ -268,3 +284,78 @@ async def update_case_study(item_id: int, payload: dict, conn: asyncpg.Connectio
 @router.delete("/case-studies/{item_id}")
 async def delete_case_study(item_id: int, conn: asyncpg.Connection = Depends(get_db)):
     return await _delete(CASE_STUDY, item_id, conn)
+
+
+# --- Assistant CV : extraction LLM + déduplication -----------------------------
+async def _existing(conn, table, column):
+    rows = await conn.fetch(f"SELECT {column} AS v FROM {table}")
+    return {(r["v"] or "").strip().lower() for r in rows}
+
+
+@router.post("/cv/analyze")
+async def cv_analyze(conn: asyncpg.Connection = Depends(get_db)):
+    """Lit le CV, en extrait compétences/parcours/projets via le LLM, et ne renvoie
+    que les éléments ABSENTS de la base (suggestions à valider)."""
+    cv_text = await cv.get_cv_text()
+    if not cv_text:
+        raise HTTPException(status_code=503, detail="CV introuvable ou illisible (cv.pdf)")
+    try:
+        data = await llm.extract_cv_data(cv_text)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Échec de l'analyse LLM : {exc}") from exc
+
+    skill_names = await _existing(conn, "skills", "name")
+    timeline_titles = await _existing(conn, "timeline_events", "title")
+    cs_slugs = await _existing(conn, "case_studies", "slug")
+    cs_titles = await _existing(conn, "case_studies", "title")
+
+    def _new(items, key, seen):
+        out = []
+        for it in items:
+            val = (it.get(key) or "").strip().lower()
+            if val and val not in seen:
+                out.append(it)
+                seen.add(val)  # évite les doublons internes à la réponse LLM
+        return out
+
+    skills = _new(data["skills"], "name", set(skill_names))
+    timeline = _new(data["timeline"], "title", set(timeline_titles))
+    case_studies = [
+        cs for cs in data["case_studies"]
+        if (cs.get("slug") or "").strip().lower() not in cs_slugs
+        and (cs.get("title") or "").strip().lower() not in cs_titles
+    ]
+    return {
+        "skills": skills,
+        "timeline": timeline,
+        "case_studies": case_studies,
+        "counts": {
+            "skills": len(skills),
+            "timeline": len(timeline),
+            "case_studies": len(case_studies),
+        },
+    }
+
+
+@router.post("/cv/apply")
+async def cv_apply(payload: dict, conn: asyncpg.Connection = Depends(get_db)):
+    """Insère les suggestions cochées. Chaque élément est tenté indépendamment."""
+    specs = {"skills": SKILL, "timeline": TIMELINE, "case_studies": CASE_STUDY}
+    added, errors = {}, []
+    for kind, spec in specs.items():
+        added[kind] = 0
+        for item in payload.get(kind, []):
+            cols, placeholders, values = _build_insert(spec, item)
+            if not cols:
+                continue
+            try:
+                await conn.execute(
+                    f"INSERT INTO {spec.table} ({', '.join(cols)}) "
+                    f"VALUES ({', '.join(placeholders)})",
+                    *values,
+                )
+                added[kind] += 1
+            except asyncpg.PostgresError as exc:
+                errors.append({"kind": kind, "item": item.get("name") or item.get("title"),
+                               "error": str(exc)})
+    return {"added": added, "errors": errors}

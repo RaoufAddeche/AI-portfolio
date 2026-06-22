@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Check, EyeOff, Trash2, Mail, Star, FolderGit2, LogOut, BarChart3,
   Eye, Users, Download, MousePointerClick, MessageCircle, Clock, ChevronsDown,
-  User, Layers, Milestone, Rocket, MessagesSquare,
+  User, Layers, Milestone, Rocket, MessagesSquare, Sparkles,
 } from "lucide-react";
 import ProfileEditor from "./admin/ProfileEditor.jsx";
 import SkillsEditor from "./admin/SkillsEditor.jsx";
 import TimelineEditor from "./admin/TimelineEditor.jsx";
 import CaseStudiesEditor from "./admin/CaseStudiesEditor.jsx";
+import CvAssistant from "./admin/CvAssistant.jsx";
 
 const api = (path, token, opts = {}) =>
   fetch(`/api/admin${path}`, {
@@ -76,6 +77,7 @@ export default function Admin() {
 
   const TABS = [
     { id: "profil", label: "Profil", Icon: User },
+    { id: "cv", label: "Assistant CV", Icon: Sparkles },
     { id: "competences", label: "Compétences", Icon: Layers },
     { id: "parcours", label: "Parcours", Icon: Milestone },
     { id: "cas", label: "Études de cas", Icon: Rocket },
@@ -112,6 +114,7 @@ export default function Admin() {
 
       <main className="container-page py-8">
         {tab === "profil" && <ProfileEditor token={token} />}
+        {tab === "cv" && <CvAssistant token={token} />}
         {tab === "competences" && <SkillsEditor token={token} />}
         {tab === "parcours" && <TimelineEditor token={token} />}
         {tab === "cas" && <CaseStudiesEditor token={token} />}
