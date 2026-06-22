@@ -85,6 +85,7 @@ class Profile(BaseModel):
     availability: str | None
     cv_url_fr: str | None = None
     cv_url_en: str | None = None
+    cv_url_es: str | None = None
     created_at: datetime
     updated_at: datetime
 

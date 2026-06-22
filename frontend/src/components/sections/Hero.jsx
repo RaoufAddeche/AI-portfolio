@@ -56,8 +56,11 @@ export default function Hero({ profile, loading }) {
             </a>
             <a
               href={
-                (lang === "en" ? profile.cv_url_en : profile.cv_url_fr) ||
-                `/${SITE.cvFile[lang] || SITE.cvFile.fr}`
+                // CV uploadé : langue courante → EN → FR (1er disponible),
+                // sinon repli sur le fichier statique de config.js.
+                [...new Set([lang, "en", "fr"])]
+                  .map((l) => profile[`cv_url_${l}`])
+                  .find(Boolean) || `/${SITE.cvFile[lang] || SITE.cvFile.fr}`
               }
               download
               onClick={() => track("cv_download", { event_label: lang })}

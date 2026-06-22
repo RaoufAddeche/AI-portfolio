@@ -19,10 +19,11 @@ _cache: dict = {"text": "", "ts": 0.0}
 
 
 async def _fetch_pdf_bytes() -> bytes | None:
-    """CV uploadé depuis l'admin (prioritaire), sinon fichier statique (cv_url)."""
-    uploaded = UPLOADS_DIR / "cv-fr.pdf"
-    if uploaded.is_file():
-        return uploaded.read_bytes()
+    """CV uploadé depuis l'admin (FR → EN → ES), sinon fichier statique (cv_url)."""
+    for lang in ("fr", "en", "es"):
+        uploaded = UPLOADS_DIR / f"cv-{lang}.pdf"
+        if uploaded.is_file():
+            return uploaded.read_bytes()
     async with httpx.AsyncClient(timeout=8) as client:
         resp = await client.get(get_settings().cv_url)
         resp.raise_for_status()

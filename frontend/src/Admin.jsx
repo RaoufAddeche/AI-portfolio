@@ -77,46 +77,98 @@ export default function Admin() {
     );
   }
 
-  const TABS = [
-    { id: "profil", label: "Profil", Icon: User },
-    { id: "cv", label: "Assistant CV", Icon: Sparkles },
-    { id: "competences", label: "Compétences", Icon: Layers },
-    { id: "parcours", label: "Parcours", Icon: Milestone },
-    { id: "cas", label: "Études de cas", Icon: Rocket },
-    { id: "blog", label: "Blog", Icon: FileText },
-    { id: "reseaux", label: "Réseaux", Icon: Share2 },
-    { id: "projets", label: "Projets GitHub", Icon: FolderGit2 },
-    { id: "avis", label: "Avis", Icon: Star },
-    { id: "messages", label: "Messages", Icon: Mail },
-    { id: "conversations", label: "Chat", Icon: MessagesSquare },
-    { id: "analytics", label: "Analytics", Icon: BarChart3 },
+  const GROUPS = [
+    {
+      label: "Contenu",
+      tabs: [
+        { id: "profil", label: "Profil", Icon: User },
+        { id: "cv", label: "Assistant CV", Icon: Sparkles },
+        { id: "competences", label: "Compétences", Icon: Layers },
+        { id: "parcours", label: "Parcours", Icon: Milestone },
+        { id: "cas", label: "Études de cas", Icon: Rocket },
+        { id: "blog", label: "Blog", Icon: FileText },
+        { id: "reseaux", label: "Réseaux", Icon: Share2 },
+      ],
+    },
+    {
+      label: "Modération",
+      tabs: [
+        { id: "projets", label: "Projets GitHub", Icon: FolderGit2 },
+        { id: "avis", label: "Avis", Icon: Star },
+        { id: "messages", label: "Messages", Icon: Mail },
+        { id: "conversations", label: "Chat", Icon: MessagesSquare },
+      ],
+    },
+    {
+      label: "Statistiques",
+      tabs: [{ id: "analytics", label: "Analytics", Icon: BarChart3 }],
+    },
   ];
+  const allTabs = GROUPS.flatMap((g) => g.tabs);
+  const current = allTabs.find((t) => t.id === tab) || allTabs[0];
+  const CurrentIcon = current.Icon;
 
   return (
     <div className="min-h-screen bg-bg">
-      <header className="border-b border-line bg-surface">
-        <div className="container-page flex flex-col gap-2 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
+      <header className="sticky top-0 z-10 border-b border-line bg-surface">
+        <div className="container-page flex h-16 items-center justify-between gap-3">
           <h1 className="shrink-0 font-semibold text-ink">Administration</h1>
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {TABS.map(({ id, label, Icon }) => (
-              <button
-                key={id}
-                onClick={() => setTab(id)}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  tab === id ? "bg-accent-soft text-accent" : "text-body hover:text-ink"
-                }`}
-              >
-                <Icon className="h-4 w-4" strokeWidth={1.75} /> {label}
-              </button>
+          {/* Mobile : menu déroulant groupé */}
+          <select
+            value={tab}
+            onChange={(e) => setTab(e.target.value)}
+            className="field max-w-[60%] lg:hidden"
+          >
+            {GROUPS.map((g) => (
+              <optgroup key={g.label} label={g.label}>
+                {g.tabs.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
-            <a href="/" className="ml-2 grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted hover:text-ink" title="Retour au site">
-              <LogOut className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            </a>
-          </div>
+          </select>
+          <a href="/" className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted hover:text-ink" title="Retour au site">
+            <LogOut className="h-[18px] w-[18px]" strokeWidth={1.75} />
+          </a>
         </div>
       </header>
 
-      <main className="container-page py-8">
+      <div className="container-page flex gap-8 py-8">
+        {/* Desktop : barre latérale groupée */}
+        <aside className="hidden w-56 shrink-0 lg:block">
+          <nav className="sticky top-24 space-y-6">
+            {GROUPS.map((g) => (
+              <div key={g.label}>
+                <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                  {g.label}
+                </p>
+                <div className="space-y-0.5">
+                  {g.tabs.map(({ id, label, Icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => setTab(id)}
+                      className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                        tab === id
+                          ? "bg-accent-soft text-accent"
+                          : "text-body hover:bg-surface-2 hover:text-ink"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </nav>
+        </aside>
+
+        <main className="min-w-0 flex-1">
+          <div className="mb-6 flex items-center gap-2.5">
+            <CurrentIcon className="h-5 w-5 text-accent" strokeWidth={1.75} />
+            <h2 className="text-lg font-semibold text-ink">{current.label}</h2>
+          </div>
         {tab === "profil" && <ProfileEditor token={token} />}
         {tab === "cv" && <CvAssistant token={token} />}
         {tab === "competences" && <SkillsEditor token={token} />}
@@ -129,7 +181,8 @@ export default function Admin() {
         {tab === "avis" && <Reviews token={token} />}
         {tab === "messages" && <Messages token={token} />}
         {tab === "conversations" && <Conversations token={token} />}
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

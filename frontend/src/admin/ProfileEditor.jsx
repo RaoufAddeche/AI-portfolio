@@ -109,10 +109,11 @@ export default function ProfileEditor({ token }) {
           Le CV téléversé alimente le bouton « Télécharger le CV » et la base de
           connaissance du chatbot.
         </p>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             { kind: "cv_fr", field: "cv_url_fr", label: "CV français" },
             { kind: "cv_en", field: "cv_url_en", label: "CV anglais" },
+            { kind: "cv_es", field: "cv_url_es", label: "CV espagnol" },
           ].map(({ kind, field, label }) => (
             <div key={kind} className="space-y-2">
               <span className="block text-xs font-medium text-muted">{label}</span>

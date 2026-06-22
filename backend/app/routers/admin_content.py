@@ -104,7 +104,7 @@ PROFILE = Spec(
     "profile",
     columns=[
         "full_name", "email", "phone", "linkedin_url", "github_url",
-        "kaggle_url", "photo_url", "location", "cv_url_fr", "cv_url_en",
+        "kaggle_url", "photo_url", "location", "cv_url_fr", "cv_url_en", "cv_url_es",
         *_i18n("title", "en", "es"), *_i18n("bio", "en", "es"),
         *_i18n("hero_pitch", "en", "es"), *_i18n("availability", "en", "es"),
     ],
@@ -264,6 +264,7 @@ _UPLOAD_KINDS = {
     "photo": ("photo", {".jpg", ".jpeg", ".png", ".webp"}),
     "cv_fr": ("cv-fr", {".pdf"}),
     "cv_en": ("cv-en", {".pdf"}),
+    "cv_es": ("cv-es", {".pdf"}),
 }
 _MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 Mo
 
