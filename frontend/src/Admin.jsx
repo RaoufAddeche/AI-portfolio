@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Check, EyeOff, Trash2, Mail, Star, FolderGit2, LogOut, BarChart3,
   Eye, Users, Download, MousePointerClick, MessageCircle, Clock, ChevronsDown,
-  User, Layers, Milestone, Rocket, MessagesSquare, Sparkles,
+  User, Layers, Milestone, Rocket, MessagesSquare, Sparkles, FileText, Share2,
 } from "lucide-react";
 import ProfileEditor from "./admin/ProfileEditor.jsx";
 import SkillsEditor from "./admin/SkillsEditor.jsx";
 import TimelineEditor from "./admin/TimelineEditor.jsx";
 import CaseStudiesEditor from "./admin/CaseStudiesEditor.jsx";
 import CvAssistant from "./admin/CvAssistant.jsx";
+import BlogEditor from "./admin/BlogEditor.jsx";
+import SocialEditor from "./admin/SocialEditor.jsx";
 
 const api = (path, token, opts = {}) =>
   fetch(`/api/admin${path}`, {
@@ -81,6 +83,8 @@ export default function Admin() {
     { id: "competences", label: "Compétences", Icon: Layers },
     { id: "parcours", label: "Parcours", Icon: Milestone },
     { id: "cas", label: "Études de cas", Icon: Rocket },
+    { id: "blog", label: "Blog", Icon: FileText },
+    { id: "reseaux", label: "Réseaux", Icon: Share2 },
     { id: "projets", label: "Projets GitHub", Icon: FolderGit2 },
     { id: "avis", label: "Avis", Icon: Star },
     { id: "messages", label: "Messages", Icon: Mail },
@@ -118,6 +122,8 @@ export default function Admin() {
         {tab === "competences" && <SkillsEditor token={token} />}
         {tab === "parcours" && <TimelineEditor token={token} />}
         {tab === "cas" && <CaseStudiesEditor token={token} />}
+        {tab === "blog" && <BlogEditor token={token} />}
+        {tab === "reseaux" && <SocialEditor token={token} />}
         {tab === "analytics" && <Analytics token={token} />}
         {tab === "projets" && <Projects token={token} cats={cats} />}
         {tab === "avis" && <Reviews token={token} />}

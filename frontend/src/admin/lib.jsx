@@ -176,7 +176,7 @@ export function Flash({ flash }) {
  * - blank       : gabarit d'un nouvel élément
  * - intro       : phrase d'aide en tête de section
  */
-export function EntityList({ token, path, summary, Form, blank, intro }) {
+export function EntityList({ token, path, summary, Form, blank, intro, i18n = true }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState(null);
@@ -257,7 +257,7 @@ export function EntityList({ token, path, summary, Form, blank, intro }) {
         <div className="card border-accent/40">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-ink">Nouvel élément</h3>
-            <LangSwitch lang={lang} setLang={setLang} />
+            {i18n && <LangSwitch lang={lang} setLang={setLang} />}
           </div>
           <div className="space-y-4">
             <Form draft={draft} set={set} lang={lang} />
@@ -287,9 +287,11 @@ export function EntityList({ token, path, summary, Form, blank, intro }) {
 
           {openId === item.id && draft && (
             <div className="mt-4 border-t border-line pt-4">
-              <div className="mb-4 flex justify-end">
-                <LangSwitch lang={lang} setLang={setLang} />
-              </div>
+              {i18n && (
+                <div className="mb-4 flex justify-end">
+                  <LangSwitch lang={lang} setLang={setLang} />
+                </div>
+              )}
               <div className="space-y-4">
                 <Form draft={draft} set={set} lang={lang} />
               </div>

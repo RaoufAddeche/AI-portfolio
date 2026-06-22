@@ -7,7 +7,7 @@ colonnes `_en` / `_es` (cf. app/i18n.py). Tout est édité via une liste blanche
 de colonnes par table — aucune injection de nom de colonne possible.
 """
 import json
-from datetime import date
+from datetime import date, datetime
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException
@@ -34,17 +34,30 @@ def _parse_date(value):
         return None
 
 
+def _parse_dt(value):
+    """Horodatage tolérant : accepte 'YYYY-MM-DD' (→ minuit) ou ISO complet."""
+    if not value:
+        return None
+    s = str(value).strip()
+    try:
+        return datetime.fromisoformat(s)
+    except ValueError:
+        d = _parse_date(s)
+        return datetime(d.year, d.month, d.day) if d else None
+
+
 # --- Spécification des colonnes éditables par table ---------------------------
 # Pour chaque table : l'ensemble des colonnes autorisées + le type de celles qui
 # demandent un encodage particulier (tableaux Postgres, JSONB, dates, etc.).
 class Spec:
-    def __init__(self, table, columns, *, arrays=(), jsons=(), dates=(), ints=(),
-                 floats=(), bools=()):
+    def __init__(self, table, columns, *, arrays=(), jsons=(), dates=(), stamps=(),
+                 ints=(), floats=(), bools=()):
         self.table = table
         self.columns = set(columns)
         self.arrays = set(arrays)
         self.jsons = set(jsons)
         self.dates = set(dates)
+        self.stamps = set(stamps)
         self.ints = set(ints)
         self.floats = set(floats)
         self.bools = set(bools)
@@ -59,6 +72,8 @@ class Spec:
             return list(value) if value else []
         if col in self.dates:
             return _parse_date(value)
+        if col in self.stamps:
+            return _parse_dt(value)
         if col in self.ints:
             return int(value) if value not in (None, "") else None
         if col in self.floats:
@@ -127,6 +142,23 @@ CASE_STUDY = Spec(
     arrays=("stack", "tags", "results", "results_en", "results_es"),
     jsons=("architecture", "architecture_en", "architecture_es"),
     ints=("display_order",), bools=("is_published",),
+)
+
+BLOG = Spec(
+    "blog_posts",
+    columns=[
+        "title", "slug", "excerpt", "content", "meta_title", "meta_description",
+        "keywords", "cover_image_url", "category", "tags", "read_time_minutes",
+        "is_published", "is_featured", "published_at",
+    ],
+    arrays=("keywords", "tags"), stamps=("published_at",),
+    ints=("read_time_minutes",), bools=("is_published", "is_featured"),
+)
+
+SOCIAL = Spec(
+    "social_links",
+    columns=["platform", "url", "display_name", "icon", "display_order", "is_active"],
+    ints=("display_order",), bools=("is_active",),
 )
 
 
@@ -284,6 +316,48 @@ async def update_case_study(item_id: int, payload: dict, conn: asyncpg.Connectio
 @router.delete("/case-studies/{item_id}")
 async def delete_case_study(item_id: int, conn: asyncpg.Connection = Depends(get_db)):
     return await _delete(CASE_STUDY, item_id, conn)
+
+
+# --- Blog ---------------------------------------------------------------------
+@router.get("/blog")
+async def list_blog(conn: asyncpg.Connection = Depends(get_db)):
+    return await _list(BLOG, conn, "published_at DESC NULLS LAST, created_at DESC")
+
+
+@router.post("/blog")
+async def create_blog(payload: dict, conn: asyncpg.Connection = Depends(get_db)):
+    return await _create(BLOG, payload, conn)
+
+
+@router.patch("/blog/{item_id}")
+async def update_blog(item_id: int, payload: dict, conn: asyncpg.Connection = Depends(get_db)):
+    return await _update(BLOG, item_id, payload, conn)
+
+
+@router.delete("/blog/{item_id}")
+async def delete_blog(item_id: int, conn: asyncpg.Connection = Depends(get_db)):
+    return await _delete(BLOG, item_id, conn)
+
+
+# --- Liens sociaux ------------------------------------------------------------
+@router.get("/social")
+async def list_social(conn: asyncpg.Connection = Depends(get_db)):
+    return await _list(SOCIAL, conn, "display_order ASC, platform")
+
+
+@router.post("/social")
+async def create_social(payload: dict, conn: asyncpg.Connection = Depends(get_db)):
+    return await _create(SOCIAL, payload, conn)
+
+
+@router.patch("/social/{item_id}")
+async def update_social(item_id: int, payload: dict, conn: asyncpg.Connection = Depends(get_db)):
+    return await _update(SOCIAL, item_id, payload, conn)
+
+
+@router.delete("/social/{item_id}")
+async def delete_social(item_id: int, conn: asyncpg.Connection = Depends(get_db)):
+    return await _delete(SOCIAL, item_id, conn)
 
 
 # --- Assistant CV : extraction LLM + déduplication -----------------------------
