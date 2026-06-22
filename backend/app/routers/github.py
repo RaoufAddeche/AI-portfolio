@@ -111,6 +111,24 @@ async def sync_repos(
     if not settings.openai_api_key:
         raise HTTPException(status_code=400, detail="OPENAI_API_KEY non configuré")
 
+    return await run_sync(
+        conn, min_stars=min_stars, include_forks=include_forks, limit=limit, force=force
+    )
+
+
+async def run_sync(
+    conn: asyncpg.Connection,
+    *,
+    min_stars: int = 0,
+    include_forks: bool = False,
+    limit: int = 30,
+    force: bool = False,
+) -> dict:
+    """Cœur de la synchro : liste les repos, filtre, résume (LLM) et upsert en draft.
+
+    Réutilisé par l'endpoint public (token de sync) et par l'admin (token admin).
+    """
+    settings = get_settings()
     try:
         repos = await gh.list_repos()
     except Exception as exc:  # noqa: BLE001

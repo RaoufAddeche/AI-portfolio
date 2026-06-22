@@ -13,10 +13,12 @@ from pathlib import Path
 import asyncpg
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from ..config import get_settings
 from ..db import get_db
 from ..security import require_admin
 from ..services import cv, llm
 from ..uploads import ensure_uploads_dir
+from .github import run_sync
 
 router = APIRouter(prefix="/api/admin", tags=["admin-content"], dependencies=[Depends(require_admin)])
 
@@ -286,6 +288,17 @@ async def upload_file(kind: str = Form(...), file: UploadFile = File(...)):
     (ensure_uploads_dir() / filename).write_bytes(content)
     # ?v=taille : casse le cache navigateur quand le fichier change (nom fixe).
     return {"url": f"/api/uploads/{filename}?v={len(content)}"}
+
+
+# --- Synchro GitHub (déclenchée depuis l'admin) -------------------------------
+@router.post("/github/sync")
+async def admin_github_sync(
+    limit: int = 50, force: bool = False, conn: asyncpg.Connection = Depends(get_db)
+):
+    """Lance un scan GitHub depuis l'interface admin (mêmes effets que /api/github/sync)."""
+    if not get_settings().openai_api_key:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY non configuré")
+    return await run_sync(conn, limit=limit, force=force)
 
 
 # --- Compétences --------------------------------------------------------------

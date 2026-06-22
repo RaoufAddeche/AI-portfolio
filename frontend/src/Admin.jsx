@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Check, EyeOff, Trash2, Mail, Star, FolderGit2, LogOut, BarChart3,
   Eye, Users, Download, MousePointerClick, MessageCircle, Clock, ChevronsDown,
-  User, Layers, Milestone, Rocket, MessagesSquare, Sparkles, FileText, Share2,
+  User, Layers, Milestone, Rocket, MessagesSquare, Sparkles, FileText, Share2, RefreshCw,
 } from "lucide-react";
 import ProfileEditor from "./admin/ProfileEditor.jsx";
 import SkillsEditor from "./admin/SkillsEditor.jsx";
@@ -346,18 +346,55 @@ function Analytics({ token }) {
 
 function Projects({ token, cats }) {
   const { items, loading, reload } = useList("/portfolio", token);
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState("");
 
   const update = async (id, body) => {
     await api(`/portfolio/${id}`, token, { method: "PATCH", body: JSON.stringify(body) });
     reload();
   };
 
+  const scan = async () => {
+    setScanning(true);
+    setScanMsg("");
+    try {
+      const res = await api("/github/sync?limit=50", token, { method: "POST" });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.detail || "Échec du scan");
+      }
+      const d = await res.json();
+      setScanMsg(
+        `${d.summarized_count} projet(s) résumé(s), ${d.skipped_count} ignoré(s)` +
+          (d.errors?.length ? `, ${d.errors.length} erreur(s)` : "") + ".",
+      );
+      reload();
+    } catch (e) {
+      setScanMsg(e.message);
+    } finally {
+      setScanning(false);
+    }
+  };
+
   if (loading) return <p className="text-sm text-muted">Chargement…</p>;
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted">
-        Approuve les projets à afficher publiquement et corrige leur catégorie.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted">
+          Approuve les projets à afficher publiquement et corrige leur catégorie.
+        </p>
+        <button onClick={scan} disabled={scanning} className="btn-primary shrink-0 disabled:opacity-60">
+          <RefreshCw className={`h-4 w-4 ${scanning ? "animate-spin" : ""}`} strokeWidth={2} />
+          {scanning ? "Scan en cours…" : "Scanner GitHub"}
+        </button>
+      </div>
+      {scanning && (
+        <p className="text-xs text-muted">
+          Analyse des repos via le LLM — ça peut prendre jusqu'à une minute. Seuls les
+          repos nouveaux ou modifiés sont (re)résumés.
+        </p>
+      )}
+      {scanMsg && !scanning && <p className="text-sm text-accent">{scanMsg}</p>}
       {items.map((p) => (
         <div key={p.id} className="card flex flex-wrap items-center gap-4">
           <div className="min-w-0 flex-1">
