@@ -24,9 +24,11 @@ VALUES (
   'usages réels et les besoins métier, en combinant des compétences techniques (IA '
   'générative, LLM, agents IA, data engineering) et une vraie compréhension du terrain. '
   'Langues : français (langue maternelle), anglais professionnel (B2).',
-  'Développeur IA chez Midas / Mobivia, je conçois des voicebots IA temps réel, '
-  'des workflows basés sur les LLM et des outils d''assistance aux développeurs, '
-  'déployés en production sur AWS.',
+  'Curieux de nature et animé par l''envie de créer, j''aime apprendre, expérimenter '
+  'et transformer des idées en solutions concrètes. Mon parcours, du commerce à '
+  'l''intelligence artificielle, m''a appris à faire le lien entre les besoins humains, '
+  'les enjeux métiers et les possibilités offertes par la technologie. Aujourd''hui, '
+  'je conçois des projets qui allient innovation, utilité et impact réel.',
   'addeche.raouf@gmail.com',
   '06.87.89.90.04',
   'https://www.linkedin.com/in/raouf-addeche-706157113',
@@ -203,8 +205,10 @@ UPDATE profile SET
     'real-world usage and business needs. My background in client relations gave me a strong '
     'grasp of the field, which I now combine with technical skills in generative AI, LLMs and '
     'data engineering.',
-  hero_pitch_en = 'AI Developer at Midas / Mobivia, I build real-time AI voicebots, LLM-based '
-    'workflows and developer-assistance tools, deployed in production on AWS.',
+  hero_pitch_en = 'Curious by nature and driven by the urge to build, I love to learn, '
+    'experiment and turn ideas into concrete solutions. My path, from sales to artificial '
+    'intelligence, taught me to bridge human needs, business challenges and what technology '
+    'makes possible. Today, I design projects that combine innovation, usefulness and real impact.',
   availability_en = 'Available across France & internationally'
 WHERE id = 1;
 
@@ -327,9 +331,11 @@ UPDATE profile SET
     'para los usos reales y las necesidades del negocio, combinando competencias técnicas (IA '
     'generativa, LLM, agentes de IA, ingeniería de datos) con una verdadera comprensión del '
     'terreno. Idiomas: francés (lengua materna), inglés profesional (B2).',
-  hero_pitch_es = 'Desarrollador de IA en Midas / Mobivia, diseño voicebots de IA en tiempo real, '
-    'flujos de trabajo basados en LLM y herramientas de asistencia para desarrolladores, '
-    'desplegados en producción en AWS.',
+  hero_pitch_es = 'Curioso por naturaleza y movido por las ganas de crear, me gusta aprender, '
+    'experimentar y convertir ideas en soluciones concretas. Mi trayectoria, del comercio a la '
+    'inteligencia artificial, me enseñó a tender puentes entre las necesidades humanas, los retos '
+    'de negocio y las posibilidades que ofrece la tecnología. Hoy diseño proyectos que combinan '
+    'innovación, utilidad e impacto real.',
   availability_es = 'Disponibilidad en Francia e internacional'
 WHERE id = 1;
 
