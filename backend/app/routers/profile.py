@@ -23,26 +23,6 @@ async def get_profile(
     return Profile(**data)
 
 
-@router.put("/api/profile")
-async def update_profile(profile_data: dict, conn: asyncpg.Connection = Depends(get_db)):
-    """Mettre à jour le profil (champs dynamiques)."""
-    fields, values, param_count = [], [], 0
-    for key, value in profile_data.items():
-        if key not in ["id", "created_at", "updated_at"]:
-            param_count += 1
-            fields.append(f"{key} = ${param_count}")
-            values.append(value)
-
-    if not fields:
-        raise HTTPException(status_code=400, detail="No valid fields to update")
-
-    query = f"UPDATE profile SET {', '.join(fields)} WHERE id = 1 RETURNING *"
-    row = await conn.fetchrow(query, *values)
-    if not row:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    return Profile(**dict(row))
-
-
 @router.get("/api/timeline", response_model=list[TimelineEvent])
 async def get_timeline(
     category: str | None = Query(None, description="Filter by category"),
@@ -72,34 +52,6 @@ async def get_timeline(
             event["metrics"] = json.loads(event["metrics"]) if event["metrics"] else {}
         events.append(TimelineEvent(**event))
     return events
-
-
-@router.post("/api/timeline")
-async def create_timeline_event(event: dict, conn: asyncpg.Connection = Depends(get_db)):
-    """Créer un nouvel événement dans la timeline."""
-    row = await conn.fetchrow(
-        """
-        INSERT INTO timeline_events
-            (date, end_date, title, description, category, icon, metrics, tags,
-             link_url, display_order, is_highlight)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING *
-        """,
-        event.get("date"),
-        event.get("end_date"),
-        event.get("title"),
-        event.get("description"),
-        event.get("category"),
-        event.get("icon"),
-        json.dumps(event.get("metrics")) if event.get("metrics") else None,
-        event.get("tags", []),
-        event.get("link_url"),
-        event.get("display_order", 0),
-        event.get("is_highlight", False),
-    )
-    result = dict(row)
-    result["tags"] = list(result["tags"]) if result["tags"] else []
-    return TimelineEvent(**result)
 
 
 @router.get("/api/skills", response_model=list[Skill])

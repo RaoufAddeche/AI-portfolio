@@ -2,7 +2,7 @@
 import json
 
 import asyncpg
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from ..db import get_db
 from ..models import AnalyticsEvent, VisitorSession
@@ -13,17 +13,26 @@ _COUNTER_FIELDS = {"page_views", "projects_viewed", "blog_posts_viewed", "mode_s
 _BOOL_FIELDS = {"contact_submitted", "cv_downloaded"}
 
 
+def _client_ip(request: Request) -> str | None:
+    """IP réelle du client derrière le reverse-proxy (en-têtes posés par nginx/Caddy)."""
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.headers.get("x-real-ip") or (request.client.host if request.client else None)
+
+
 @router.post("/api/analytics/event")
 async def track_analytics_event(
-    event: AnalyticsEvent, conn: asyncpg.Connection = Depends(get_db)
+    event: AnalyticsEvent, request: Request, conn: asyncpg.Connection = Depends(get_db)
 ):
-    """Enregistrer un événement analytics."""
+    """Enregistrer un événement analytics (IP captée côté serveur, pour filtrage admin)."""
     await conn.execute(
         """
         INSERT INTO analytics_events (
             session_id, event_type, event_category, event_label, event_value,
-            portfolio_mode, page_url, referrer_url, target_type, target_id, metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            portfolio_mode, page_url, referrer_url, target_type, target_id, metadata,
+            ip_address
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         """,
         event.session_id,
         event.event_type,
@@ -36,6 +45,7 @@ async def track_analytics_event(
         event.target_type,
         event.target_id,
         json.dumps(event.metadata) if event.metadata else None,
+        _client_ip(request),
     )
     return {"success": True, "message": "Event tracked"}
 

@@ -35,6 +35,28 @@ function sessionId() {
   }
 }
 
+// ── Opt-out : ne pas se compter soi-même ──────────────────────────────────
+// Visiter ?noanalytics pose un flag persistant (localStorage) ; ?analytics le
+// retire. Tant qu'il est posé, track() ne fait rien sur ce navigateur.
+const OPTOUT_KEY = "analytics_optout";
+
+export function isOptedOut() {
+  try {
+    const params = new URLSearchParams(location.search);
+    if (params.has("noanalytics")) {
+      localStorage.setItem(OPTOUT_KEY, "1");
+      console.info("[analytics] désactivé pour ce navigateur (opt-out).");
+    }
+    if (params.has("analytics")) {
+      localStorage.removeItem(OPTOUT_KEY);
+      console.info("[analytics] réactivé pour ce navigateur.");
+    }
+    return localStorage.getItem(OPTOUT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Envoie un événement analytics (best-effort, ne lève jamais).
  * @param {string} event_type  ex. "page_view" | "cv_download" | "contact"
@@ -45,6 +67,7 @@ function sessionId() {
  */
 export function track(event_type, extra = {}) {
   try {
+    if (isOptedOut()) return; // visiteur exclu (toi) : on ne compte rien
     const body = JSON.stringify({
       session_id: sessionId(),
       event_type,
@@ -75,6 +98,7 @@ export function track(event_type, extra = {}) {
  */
 export function initEngagement() {
   if (typeof window === "undefined") return;
+  if (isOptedOut()) return; // pas d'écouteurs si on est exclu
   const start = Date.now();
 
   // ── Profondeur de scroll (paliers, une seule fois chacun) ──

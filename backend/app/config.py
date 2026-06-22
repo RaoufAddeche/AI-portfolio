@@ -48,6 +48,15 @@ class Settings(BaseSettings):
     admin_token: str | None = None
     public_base_url: str = "http://localhost:8000"
 
+    # IP à exclure des analytics (les tiennes), séparées par des virgules.
+    # ex : ANALYTICS_EXCLUDE_IPS="88.120.0.1, 2a01:..." — filtre le dashboard
+    # et la liste des conversations du chatbot.
+    analytics_exclude_ips: str = ""
+
+    @property
+    def exclude_ips(self) -> list[str]:
+        return [ip.strip() for ip in self.analytics_exclude_ips.split(",") if ip.strip()]
+
     # Le chatbot lit ce CV (PDF) comme base de connaissance, à jour automatiquement.
     # URL interne (réseau Docker) du frontend qui sert le fichier statique.
     cv_url: str = "http://frontend/cv.pdf"

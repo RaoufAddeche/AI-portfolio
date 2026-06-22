@@ -6,28 +6,34 @@ relire les messages de contact, sans toucher à la base manuellement.
 from urllib.parse import urlparse
 
 import asyncpg
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from ..config import get_settings
 from ..db import get_db
+from ..security import require_admin
 from ..services.llm import CATEGORIES
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
-
-
-def require_admin(x_admin_token: str | None = Header(None)) -> None:
-    """Vérifie le token d'admin (403 sinon, 503 si non configuré)."""
-    token = get_settings().admin_token
-    if not token:
-        raise HTTPException(status_code=503, detail="Admin non configuré (ADMIN_TOKEN)")
-    if x_admin_token != token:
-        raise HTTPException(status_code=401, detail="Token admin invalide")
 
 
 @router.get("/check", dependencies=[Depends(require_admin)])
 async def check():
     """Validation du token (utilisé par la page de login admin)."""
     return {"ok": True, "categories": CATEGORIES}
+
+
+@router.get("/whoami", dependencies=[Depends(require_admin)])
+async def whoami(request: Request):
+    """IP vue par le serveur — à coller dans ANALYTICS_EXCLUDE_IPS pour ne plus se compter."""
+    fwd = request.headers.get("x-forwarded-for")
+    ip = (
+        fwd.split(",")[0].strip()
+        if fwd
+        else request.headers.get("x-real-ip")
+        or (request.client.host if request.client else None)
+    )
+    excluded = ip in get_settings().exclude_ips
+    return {"ip": ip, "excluded": excluded}
 
 
 # ---------- Projets ----------
@@ -116,6 +122,30 @@ async def admin_delete_contact(item_id: int, conn: asyncpg.Connection = Depends(
     return {"success": True}
 
 
+# ---------- Conversations du chatbot ----------
+@router.get("/conversations", dependencies=[Depends(require_admin)])
+async def admin_list_conversations(
+    limit: int = Query(200, ge=1, le=1000), conn: asyncpg.Connection = Depends(get_db)
+):
+    """Historique des échanges avec le chatbot. `session_id` = IP de l'appelant.
+
+    `is_owner` marque les lignes provenant d'une IP exclue (ANALYTICS_EXCLUDE_IPS).
+    """
+    rows = await conn.fetch(
+        "SELECT id, session_id, question, answer, created_at "
+        "FROM chatbot_conversations ORDER BY created_at DESC LIMIT $1",
+        limit,
+    )
+    exclude = set(get_settings().exclude_ips)
+    return [{**dict(r), "is_owner": r["session_id"] in exclude} for r in rows]
+
+
+@router.delete("/conversations/{item_id}", dependencies=[Depends(require_admin)])
+async def admin_delete_conversation(item_id: int, conn: asyncpg.Connection = Depends(get_db)):
+    await conn.execute("DELETE FROM chatbot_conversations WHERE id = $1", item_id)
+    return {"success": True}
+
+
 # ---------- Analytics ----------
 def _host(url: str | None) -> str:
     """Nom d'hôte lisible d'un referrer (sinon « accès direct »)."""
@@ -133,7 +163,14 @@ async def admin_analytics(
     days: int = Query(30, ge=1, le=365), conn: asyncpg.Connection = Depends(get_db)
 ):
     """Tableau de bord analytics : trafic, engagement et conversions sur N jours."""
+    # Exclusion des IP du propriétaire (ANALYTICS_EXCLUDE_IPS) : on ne se compte pas.
+    exclude = get_settings().exclude_ips
     since = "created_at >= CURRENT_DATE - make_interval(days => $1)"
+    if exclude:
+        since += " AND (ip_address IS NULL OR ip_address <> ALL($2))"
+        params: tuple = (days, exclude)
+    else:
+        params = (days,)
 
     # Compteurs globaux en une passe (FILTER par type d'événement).
     totals = await conn.fetchrow(
@@ -150,7 +187,7 @@ async def admin_analytics(
         FROM analytics_events
         WHERE {since}
         """,
-        days,
+        *params,
     )
 
     # Scroll moyen = moyenne, par session, du palier de scroll le plus profond atteint.
@@ -163,7 +200,7 @@ async def admin_analytics(
             GROUP BY session_id
         ) s
         """,
-        days,
+        *params,
     )
 
     top_projects = await conn.fetch(
@@ -173,7 +210,7 @@ async def admin_analytics(
         WHERE event_type = 'project_click' AND event_label IS NOT NULL AND {since}
         GROUP BY event_label ORDER BY clicks DESC LIMIT 8
         """,
-        days,
+        *params,
     )
 
     referrers = await conn.fetch(
@@ -183,7 +220,7 @@ async def admin_analytics(
         WHERE event_type = 'page_view' AND {since}
         GROUP BY referrer_url ORDER BY count DESC LIMIT 20
         """,
-        days,
+        *params,
     )
     # Regroupe par hôte côté Python (URLs complètes -> domaines lisibles).
     by_host: dict[str, int] = {}
@@ -202,7 +239,7 @@ async def admin_analytics(
         WHERE event_type = 'page_view' AND {since}
         GROUP BY day ORDER BY day
         """,
-        days,
+        *params,
     )
 
     return {

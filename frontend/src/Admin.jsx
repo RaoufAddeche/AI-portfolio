@@ -2,7 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Check, EyeOff, Trash2, Mail, Star, FolderGit2, LogOut, BarChart3,
   Eye, Users, Download, MousePointerClick, MessageCircle, Clock, ChevronsDown,
+  User, Layers, Milestone, Rocket, MessagesSquare,
 } from "lucide-react";
+import ProfileEditor from "./admin/ProfileEditor.jsx";
+import SkillsEditor from "./admin/SkillsEditor.jsx";
+import TimelineEditor from "./admin/TimelineEditor.jsx";
+import CaseStudiesEditor from "./admin/CaseStudiesEditor.jsx";
 
 const api = (path, token, opts = {}) =>
   fetch(`/api/admin${path}`, {
@@ -14,7 +19,7 @@ export default function Admin() {
   const [token, setToken] = useState(() => sessionStorage.getItem("adminToken") || "");
   const [authed, setAuthed] = useState(false);
   const [cats, setCats] = useState([]);
-  const [tab, setTab] = useState("analytics");
+  const [tab, setTab] = useState("profil");
   const [error, setError] = useState("");
 
   const tryAuth = useCallback(async (raw) => {
@@ -70,30 +75,35 @@ export default function Admin() {
   }
 
   const TABS = [
-    { id: "analytics", label: "Analytics", Icon: BarChart3 },
-    { id: "projets", label: "Projets", Icon: FolderGit2 },
+    { id: "profil", label: "Profil", Icon: User },
+    { id: "competences", label: "Compétences", Icon: Layers },
+    { id: "parcours", label: "Parcours", Icon: Milestone },
+    { id: "cas", label: "Études de cas", Icon: Rocket },
+    { id: "projets", label: "Projets GitHub", Icon: FolderGit2 },
     { id: "avis", label: "Avis", Icon: Star },
     { id: "messages", label: "Messages", Icon: Mail },
+    { id: "conversations", label: "Chat", Icon: MessagesSquare },
+    { id: "analytics", label: "Analytics", Icon: BarChart3 },
   ];
 
   return (
     <div className="min-h-screen bg-bg">
       <header className="border-b border-line bg-surface">
-        <div className="container-page flex h-16 items-center justify-between">
-          <h1 className="font-semibold text-ink">Administration</h1>
-          <div className="flex items-center gap-1">
+        <div className="container-page flex flex-col gap-2 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
+          <h1 className="shrink-0 font-semibold text-ink">Administration</h1>
+          <div className="flex items-center gap-1 overflow-x-auto">
             {TABS.map(({ id, label, Icon }) => (
               <button
                 key={id}
                 onClick={() => setTab(id)}
-                className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   tab === id ? "bg-accent-soft text-accent" : "text-body hover:text-ink"
                 }`}
               >
                 <Icon className="h-4 w-4" strokeWidth={1.75} /> {label}
               </button>
             ))}
-            <a href="/" className="ml-2 grid h-9 w-9 place-items-center rounded-md text-muted hover:text-ink" title="Retour au site">
+            <a href="/" className="ml-2 grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted hover:text-ink" title="Retour au site">
               <LogOut className="h-[18px] w-[18px]" strokeWidth={1.75} />
             </a>
           </div>
@@ -101,10 +111,15 @@ export default function Admin() {
       </header>
 
       <main className="container-page py-8">
+        {tab === "profil" && <ProfileEditor token={token} />}
+        {tab === "competences" && <SkillsEditor token={token} />}
+        {tab === "parcours" && <TimelineEditor token={token} />}
+        {tab === "cas" && <CaseStudiesEditor token={token} />}
         {tab === "analytics" && <Analytics token={token} />}
         {tab === "projets" && <Projects token={token} cats={cats} />}
         {tab === "avis" && <Reviews token={token} />}
         {tab === "messages" && <Messages token={token} />}
+        {tab === "conversations" && <Conversations token={token} />}
       </main>
     </div>
   );
@@ -167,6 +182,7 @@ function Analytics({ token }) {
 
   return (
     <div className="space-y-8">
+      <WhoAmI token={token} />
       {/* Sélecteur de période */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
@@ -359,6 +375,84 @@ function Reviews({ token }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// Bandeau « ton IP » : permet de la coller dans ANALYTICS_EXCLUDE_IPS.
+function WhoAmI({ token }) {
+  const [info, setInfo] = useState(null);
+  useEffect(() => {
+    api("/whoami", token)
+      .then((r) => r.json())
+      .then(setInfo)
+      .catch(() => setInfo(null));
+  }, [token]);
+  if (!info?.ip) return null;
+  return (
+    <div className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-xs text-muted">
+      Ton IP actuelle : <span className="font-mono text-body">{info.ip}</span>{" "}
+      {info.excluded ? (
+        <span className="text-accent">· exclue des stats ✓</span>
+      ) : (
+        <span>
+          · non exclue — ajoute-la à <span className="font-mono">ANALYTICS_EXCLUDE_IPS</span> dans
+          le .env pour ne plus te compter.
+        </span>
+      )}
+    </div>
+  );
+}
+
+function Conversations({ token }) {
+  const { items, loading, reload } = useList("/conversations", token);
+  const [hideOwner, setHideOwner] = useState(true);
+  const del = async (id) => {
+    await api(`/conversations/${id}`, token, { method: "DELETE" });
+    reload();
+  };
+  if (loading) return <p className="text-sm text-muted">Chargement…</p>;
+  const shown = hideOwner ? items.filter((c) => !c.is_owner) : items;
+  const fmt = (d) => new Date(d).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+  return (
+    <div className="space-y-4">
+      <WhoAmI token={token} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted">
+          Historique des échanges avec le chatbot ({shown.length} affiché
+          {shown.length > 1 ? "s" : ""}).
+        </p>
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-body">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-line accent-accent"
+            checked={hideOwner}
+            onChange={(e) => setHideOwner(e.target.checked)}
+          />
+          Masquer mes conversations
+        </label>
+      </div>
+      {!shown.length ? (
+        <p className="text-sm text-muted">Aucune conversation.</p>
+      ) : (
+        shown.map((c) => (
+          <div key={c.id} className="card">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-xs text-muted">
+                  {fmt(c.created_at)} · <span className="font-mono">{c.session_id}</span>
+                  {c.is_owner && <span className="ml-2 text-accent">(toi)</span>}
+                </p>
+                <p className="mt-1 font-medium text-ink">{c.question}</p>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-body">{c.answer}</p>
+              </div>
+              <button onClick={() => del(c.id)} className="btn-ghost shrink-0 text-red-600">
+                <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+              </button>
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 }
