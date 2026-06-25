@@ -40,6 +40,19 @@ function sessionId() {
 // retire. Tant qu'il est posé, track() ne fait rien sur ce navigateur.
 const OPTOUT_KEY = "analytics_optout";
 
+/**
+ * Exclut définitivement CE navigateur des analytics (jusqu'à `?analytics`).
+ * Appelé à la connexion admin : ton PC/ton tél se marquent « c'est moi » tout
+ * seuls, sans avoir à gérer des IP (qui changent en 4G / au reboot box).
+ */
+export function markOwner() {
+  try {
+    localStorage.setItem(OPTOUT_KEY, "1");
+  } catch {
+    /* localStorage indispo (navigation privée stricte) : tant pis */
+  }
+}
+
 export function isOptedOut() {
   try {
     const params = new URLSearchParams(location.search);

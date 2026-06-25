@@ -11,6 +11,7 @@ import CaseStudiesEditor from "./admin/CaseStudiesEditor.jsx";
 import CvAssistant from "./admin/CvAssistant.jsx";
 import BlogEditor from "./admin/BlogEditor.jsx";
 import SocialEditor from "./admin/SocialEditor.jsx";
+import { markOwner, isOptedOut } from "./analytics.js";
 
 const api = (path, token, opts = {}) =>
   fetch(`/api/admin${path}`, {
@@ -36,6 +37,7 @@ export default function Admin() {
       setAuthed(true);
       setError("");
       sessionStorage.setItem("adminToken", tk);
+      markOwner(); // ce navigateur est le tien → on l'exclut des stats publiques
     } catch {
       setAuthed(false);
       setError("Token invalide");
@@ -596,25 +598,32 @@ function Reviews({ token }) {
   );
 }
 
-// Bandeau « ton IP » : permet de la coller dans ANALYTICS_EXCLUDE_IPS.
+// Bandeau d'exclusion : ce navigateur est auto-exclu dès la connexion admin
+// (markOwner). L'IP reste affichée comme repli serveur (ANALYTICS_EXCLUDE_IPS).
 function WhoAmI({ token }) {
   const [info, setInfo] = useState(null);
+  const optedOut = isOptedOut(); // posé par markOwner() à la connexion
   useEffect(() => {
     api("/whoami", token)
       .then((r) => r.json())
       .then(setInfo)
       .catch(() => setInfo(null));
   }, [token]);
-  if (!info?.ip) return null;
   return (
     <div className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-xs text-muted">
-      Ton IP actuelle : <span className="font-mono text-body">{info.ip}</span>{" "}
-      {info.excluded ? (
-        <span className="text-accent">· exclue des stats ✓</span>
+      {optedOut ? (
+        <span className="text-accent">
+          ✓ Ce navigateur est exclu des stats (automatique depuis ta connexion).
+        </span>
       ) : (
-        <span>
-          · non exclue — ajoute-la à <span className="font-mono">ANALYTICS_EXCLUDE_IPS</span> dans
-          le .env pour ne plus te compter.
+        <span className="text-amber-600">
+          ⚠ Ce navigateur n'est pas encore exclu — recharge la page après connexion.
+        </span>
+      )}
+      {info?.ip && (
+        <span className="ml-1">
+          · IP serveur <span className="font-mono text-body">{info.ip}</span>
+          {info.excluded ? " (aussi exclue ✓)" : ""}
         </span>
       )}
     </div>
