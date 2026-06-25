@@ -46,6 +46,7 @@ services:
       - CV_URL=${CV_URL:-http://frontend/cv.pdf}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
       - PUBLIC_BASE_URL=https://${DOMAIN}
+      - ANALYTICS_EXCLUDE_IPS=${ANALYTICS_EXCLUDE_IPS:-}
     volumes:
       - ./volumes/uploads:/app/uploads   # photo & CV uploadés depuis l'admin (persistant)
     depends_on:
