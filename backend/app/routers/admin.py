@@ -257,3 +257,74 @@ async def admin_analytics(
         "top_referrers": top_referrers,
         "daily": [{"day": r["day"].isoformat(), "views": r["views"]} for r in daily],
     }
+
+
+@router.get("/analytics/sessions", dependencies=[Depends(require_admin)])
+async def admin_analytics_sessions(
+    days: int = Query(30, ge=1, le=365),
+    limit: int = Query(200, ge=1, le=1000),
+    conn: asyncpg.Connection = Depends(get_db),
+):
+    """Détail par visite : IP (vue serveur), appareil et navigateur, pour distinguer
+    le propriétaire (toi, en boucle) des vrais visiteurs. Non filtré par IP : on veut
+    justement TOUT voir, et marquer les IP du propriétaire avec `is_owner`."""
+    exclude = set(get_settings().exclude_ips)
+
+    # Une ligne par session : IP serveur la plus récente + agrégats d'événements,
+    # enrichie de l'appareil/navigateur capté dans visitor_sessions.
+    rows = await conn.fetch(
+        """
+        WITH ev AS (
+            SELECT
+                session_id,
+                MIN(created_at)                                       AS first_seen,
+                MAX(created_at)                                       AS last_seen,
+                COUNT(*) FILTER (WHERE event_type = 'page_view')      AS page_views,
+                COUNT(*)                                              AS events,
+                (array_agg(ip_address ORDER BY created_at DESC)
+                    FILTER (WHERE ip_address IS NOT NULL))[1]         AS ip
+            FROM analytics_events
+            WHERE created_at >= CURRENT_DATE - make_interval(days => $1)
+            GROUP BY session_id
+        )
+        SELECT ev.session_id, ev.first_seen, ev.last_seen, ev.page_views,
+               ev.events, ev.ip,
+               vs.device_type, vs.browser, vs.os, vs.referrer_source
+        FROM ev
+        LEFT JOIN visitor_sessions vs ON vs.id = ev.session_id
+        ORDER BY ev.last_seen DESC
+        LIMIT $2
+        """,
+        days,
+        limit,
+    )
+
+    sessions = []
+    by_ip: dict[str, dict] = {}
+    for r in rows:
+        ip = r["ip"]
+        is_owner = ip is not None and ip in exclude
+        sessions.append(
+            {
+                "session_id": str(r["session_id"])[:8],
+                "ip": ip,
+                "is_owner": is_owner,
+                "device_type": r["device_type"],
+                "browser": r["browser"],
+                "os": r["os"],
+                "referrer": _host(r["referrer_source"]),
+                "page_views": r["page_views"],
+                "events": r["events"],
+                "first_seen": r["first_seen"].isoformat(),
+                "last_seen": r["last_seen"].isoformat(),
+            }
+        )
+        key = ip or "inconnue"
+        agg = by_ip.setdefault(
+            key, {"ip": ip, "is_owner": is_owner, "sessions": 0, "page_views": 0}
+        )
+        agg["sessions"] += 1
+        agg["page_views"] += r["page_views"]
+
+    by_ip_list = sorted(by_ip.values(), key=lambda x: x["sessions"], reverse=True)
+    return {"days": days, "sessions": sessions, "by_ip": by_ip_list}

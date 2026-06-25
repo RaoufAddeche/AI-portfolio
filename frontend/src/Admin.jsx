@@ -340,6 +340,124 @@ function Analytics({ token }) {
           )}
         </div>
       </div>
+
+      {/* Détail par visite : pour distinguer toi (en boucle) des vrais visiteurs */}
+      <SessionsDetail token={token} days={days} />
+    </div>
+  );
+}
+
+// Liste des visites avec IP + appareil : permet de repérer ses propres passages.
+function SessionsDetail({ token, days }) {
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    api(`/analytics/sessions?days=${days}`, token)
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, [open, days, token]);
+
+  const fmt = (d) =>
+    new Date(d).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+
+  return (
+    <div className="card">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <h3 className="text-sm font-semibold text-ink">Détail des visites</h3>
+        <span className="text-xs text-muted">{open ? "Masquer" : "Afficher"}</span>
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-6">
+          {loading && !data && <p className="text-sm text-muted">Chargement…</p>}
+          {!loading && !data && (
+            <p className="text-sm text-red-600">Impossible de charger le détail.</p>
+          )}
+          {data && (
+            <>
+              {/* Rollup par IP */}
+              <div>
+                <p className="mb-2 text-xs font-medium text-muted">Par adresse IP</p>
+                <ul className="space-y-1.5 text-sm">
+                  {data.by_ip.map((g) => (
+                    <li
+                      key={g.ip || "inconnue"}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <span className="font-mono text-body">{g.ip || "inconnue"}</span>
+                        {g.is_owner && (
+                          <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs text-accent">
+                            toi
+                          </span>
+                        )}
+                      </span>
+                      <span className="ml-2 shrink-0 text-muted">
+                        {g.sessions} visite{g.sessions > 1 ? "s" : ""} · {g.page_views} pages
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Liste détaillée */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="text-xs text-muted">
+                    <tr className="border-b border-line">
+                      <th className="py-2 pr-3 font-medium">IP</th>
+                      <th className="py-2 pr-3 font-medium">Appareil</th>
+                      <th className="py-2 pr-3 font-medium">Navigateur</th>
+                      <th className="py-2 pr-3 font-medium">Source</th>
+                      <th className="py-2 pr-3 font-medium">Pages</th>
+                      <th className="py-2 pr-3 font-medium">Dernière visite</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.sessions.map((s) => (
+                      <tr
+                        key={s.session_id + s.last_seen}
+                        className={`border-b border-line/60 ${s.is_owner ? "opacity-50" : ""}`}
+                      >
+                        <td className="whitespace-nowrap py-2 pr-3 font-mono text-xs text-body">
+                          {s.ip || "—"}
+                          {s.is_owner && <span className="ml-1 text-accent">(toi)</span>}
+                        </td>
+                        <td className="py-2 pr-3 text-body">{s.device_type || "—"}</td>
+                        <td className="py-2 pr-3 text-body">
+                          {[s.browser, s.os].filter(Boolean).join(" / ") || "—"}
+                        </td>
+                        <td className="py-2 pr-3 text-muted">{s.referrer}</td>
+                        <td className="py-2 pr-3 text-body">{s.page_views}</td>
+                        <td className="whitespace-nowrap py-2 pr-3 text-muted">
+                          {fmt(s.last_seen)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {data.sessions.length === 0 && (
+                  <p className="mt-3 text-sm text-muted">Aucune visite sur la période.</p>
+                )}
+              </div>
+              <p className="text-xs text-muted">
+                Astuce : les lignes marquées « toi » correspondent aux IP de{" "}
+                <span className="font-mono">ANALYTICS_EXCLUDE_IPS</span>. Repère tes autres
+                réseaux (4G, etc.) à l'appareil + IP récurrents, puis ajoute-les.
+              </p>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
