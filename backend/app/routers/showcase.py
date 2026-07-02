@@ -151,21 +151,28 @@ _TESTI_I18N = ["quote", "author_title"]
 async def _translate_testimonial(
     conn: asyncpg.Connection, item_id: int, quote: str, author_title: str
 ) -> None:
-    """Traduit un avis en EN/ES (LLM) et stocke les variantes. Non bloquant."""
+    """Traduit un avis en FR/EN/ES (LLM), quelle que soit sa langue d'origine. Non bloquant.
+
+    La base (`quote`, `author_title`) est normalisée en français ; EN/ES dans leurs colonnes.
+    """
     src = {"quote": quote, "author_title": author_title}
     try:
-        en = await llm.translate(src, "anglais")
-        es = await llm.translate(src, "espagnol")
+        tr = await llm.translate_multi(src, ["fr", "en", "es"])
+        fr, en, es = tr.get("fr", {}), tr.get("en", {}), tr.get("es", {})
         await conn.execute(
-            "UPDATE testimonials SET quote_en = $1, author_title_en = $2, "
-            "quote_es = $3, author_title_es = $4 WHERE id = $5",
+            "UPDATE testimonials SET "
+            "quote = COALESCE($1, quote), author_title = COALESCE($2, author_title), "
+            "quote_en = $3, author_title_en = $4, quote_es = $5, author_title_es = $6 "
+            "WHERE id = $7",
+            fr.get("quote"),
+            fr.get("author_title"),
             en.get("quote"),
             en.get("author_title"),
             es.get("quote"),
             es.get("author_title"),
             item_id,
         )
-    except Exception:  # noqa: BLE001 — traduction best-effort, repli FR sinon
+    except Exception:  # noqa: BLE001 — traduction best-effort, repli sur l'original sinon
         pass
 
 

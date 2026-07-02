@@ -66,6 +66,46 @@ async def translate(fields: dict[str, str], target_language: str) -> dict[str, s
         return {}
 
 
+async def translate_multi(
+    fields: dict[str, str], languages: list[str]
+) -> dict[str, dict[str, str]]:
+    """Traduit `fields` vers plusieurs langues en un seul appel.
+
+    Renvoie {code_langue: {clé: traduction}}. Conserve la formulation d'origine pour
+    la langue source (robuste quelle que soit la langue d'entrée de l'avis).
+    """
+    payload = {k: v for k, v in fields.items() if v}
+    if not payload:
+        return {}
+    names = {"fr": "français", "en": "anglais", "es": "espagnol"}
+    langs_desc = ", ".join(f"{c} ({names.get(c, c)})" for c in languages)
+    settings = get_settings()
+    resp = await _client().chat.completions.create(
+        model=settings.openai_model,
+        response_format={"type": "json_object"},
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "Tu es un traducteur professionnel. On te donne un objet JSON de champs "
+                    "(témoignage client, intitulé de poste). Renvoie un objet JSON dont chaque "
+                    f"clé est un code langue parmi : {langs_desc}. La valeur de chaque code "
+                    "langue est un objet avec EXACTEMENT les mêmes clés que l'entrée, traduites "
+                    "dans cette langue. Garde le sens et le ton ; pour la langue d'origine du "
+                    "texte, conserve la formulation d'origine sans la réécrire. Ne traduis pas "
+                    "les noms propres ni les noms d'entreprise. Réponds uniquement avec le JSON."
+                ),
+            },
+            {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+        ],
+    )
+    try:
+        data = json.loads(resp.choices[0].message.content or "{}")
+        return {c: data.get(c, {}) for c in languages}
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
 async def summarize_repo(name: str, description: str, readme: str, language: str | None) -> dict:
     """Résumé structuré d'un repo, prêt pour la DB."""
     settings = get_settings()
