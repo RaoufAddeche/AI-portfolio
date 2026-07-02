@@ -34,6 +34,38 @@ def _client() -> AsyncOpenAI:
     return AsyncOpenAI(api_key=settings.openai_api_key)
 
 
+async def translate(fields: dict[str, str], target_language: str) -> dict[str, str]:
+    """Traduit les valeurs d'un dict vers `target_language` (ex. 'anglais', 'espagnol').
+
+    Conserve les clés à l'identique. Renvoie {} en cas d'échec (non bloquant).
+    """
+    payload = {k: v for k, v in fields.items() if v}
+    if not payload:
+        return {}
+    settings = get_settings()
+    resp = await _client().chat.completions.create(
+        model=settings.openai_model,
+        response_format={"type": "json_object"},
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    f"Tu es un traducteur professionnel. Traduis vers {target_language} les "
+                    "valeurs de l'objet JSON fourni, en gardant EXACTEMENT les mêmes clés. Ce "
+                    "sont des témoignages clients et des intitulés de poste : garde le ton et "
+                    "le sens, ne traduis pas les noms propres ni les noms d'entreprise. Réponds "
+                    "uniquement avec l'objet JSON traduit."
+                ),
+            },
+            {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+        ],
+    )
+    try:
+        return json.loads(resp.choices[0].message.content or "{}")
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
 async def summarize_repo(name: str, description: str, readme: str, language: str | None) -> dict:
     """Résumé structuré d'un repo, prêt pour la DB."""
     settings = get_settings()

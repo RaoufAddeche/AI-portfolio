@@ -44,7 +44,7 @@ export default function App() {
       fetch(`/api/skills${q}`).then(json),
       fetch("/api/social-links").then(json),
       fetch(`/api/case-studies${q}`).then(json),
-      fetch("/api/testimonials").then(json),
+      fetch(`/api/testimonials${q}`).then(json),
     ]).then(([profile, timeline, projects, skills, social, caseStudies, testimonials]) => {
       setData({
         profile: val(profile, null),

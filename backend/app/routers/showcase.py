@@ -11,6 +11,7 @@ from fastapi.responses import HTMLResponse
 
 from ..config import get_settings
 from ..db import get_db
+from ..i18n import localize
 from ..models import (
     BlogPost,
     ContactSubmission,
@@ -19,7 +20,7 @@ from ..models import (
     Testimonial,
     TestimonialSubmission,
 )
-from ..services import email
+from ..services import email, llm
 
 router = APIRouter(tags=["showcase"])
 
@@ -144,13 +145,38 @@ async def get_blog_post(slug: str, conn: asyncpg.Connection = Depends(get_db)):
     return BlogPost(**result)
 
 
+_TESTI_I18N = ["quote", "author_title"]
+
+
+async def _translate_testimonial(
+    conn: asyncpg.Connection, item_id: int, quote: str, author_title: str
+) -> None:
+    """Traduit un avis en EN/ES (LLM) et stocke les variantes. Non bloquant."""
+    src = {"quote": quote, "author_title": author_title}
+    try:
+        en = await llm.translate(src, "anglais")
+        es = await llm.translate(src, "espagnol")
+        await conn.execute(
+            "UPDATE testimonials SET quote_en = $1, author_title_en = $2, "
+            "quote_es = $3, author_title_es = $4 WHERE id = $5",
+            en.get("quote"),
+            en.get("author_title"),
+            es.get("quote"),
+            es.get("author_title"),
+            item_id,
+        )
+    except Exception:  # noqa: BLE001 — traduction best-effort, repli FR sinon
+        pass
+
+
 @router.get("/api/testimonials", response_model=list[Testimonial])
 async def get_testimonials(
     featured_only: bool = Query(False, description="Show only featured testimonials"),
     published_only: bool = Query(True, description="Show only published testimonials"),
+    lang: str = Query("fr"),
     conn: asyncpg.Connection = Depends(get_db),
 ):
-    """Récupérer les témoignages."""
+    """Récupérer les témoignages (localisés selon `lang`, repli FR)."""
     query = "SELECT * FROM testimonials WHERE 1=1"
     if published_only:
         query += " AND is_published = TRUE"
@@ -158,7 +184,7 @@ async def get_testimonials(
         query += " AND is_featured = TRUE"
     query += " ORDER BY display_order ASC, date_given DESC NULLS LAST"
     rows = await conn.fetch(query)
-    return [Testimonial(**dict(row)) for row in rows]
+    return [Testimonial(**localize(dict(row), lang, _TESTI_I18N)) for row in rows]
 
 
 @router.post("/api/testimonials")
@@ -185,6 +211,11 @@ async def submit_testimonial(
         submission.author_linkedin_url,
         submission.relationship,
         submission.quote,
+    )
+
+    # Traduction automatique EN/ES dès la soumission (prête avant même la validation).
+    await _translate_testimonial(
+        conn, row["id"], submission.quote, submission.author_title
     )
 
     settings = get_settings()
