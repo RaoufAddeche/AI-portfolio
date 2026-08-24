@@ -101,6 +101,8 @@ INSERT INTO skills (name, category, subcategory, proficiency_level, is_primary) 
 ('Twilio',             'technical', 'IA conversationnelle', 4, FALSE),
 -- Data & bases de données
 ('PostgreSQL',         'technical', 'Data & Bases de données', 4, TRUE),
+('dbt',                'technical', 'Data & Bases de données', 4, TRUE),
+('Snowflake',          'technical', 'Data & Bases de données', 4, TRUE),
 ('Pandas / NumPy',     'technical', 'Data & Bases de données', 4, FALSE),
 ('PySpark',            'technical', 'Data & Bases de données', 3, FALSE),
 ('MongoDB',            'technical', 'Data & Bases de données', 3, FALSE),
