@@ -574,3 +574,33 @@ UPDATE case_studies SET
     $x$Uso de IA centralizado y enriquecido mediante un MCP interno$x$
   ]
 WHERE slug = 'outils-ia-developpeurs';
+
+-- ---------------------------------------------------------------------
+-- TITRE RNCP (obtenu le 5 novembre 2026)
+-- ---------------------------------------------------------------------
+UPDATE timeline_events SET end_date = '2026-11-05'
+WHERE title = 'École Microsoft — Développeur Data / IA';
+
+INSERT INTO timeline_events (date, end_date, title, description, category, tags, link_url, display_order, is_highlight,
+                             title_en, description_en, title_es, description_es)
+SELECT '2026-11-05', NULL, 'Titre RNCP niveau 6 — Développeur en intelligence artificielle',
+ 'Certification professionnelle de niveau 6 (bac+3/4) délivrée par Simplon.co à l''issue de l''École Microsoft, '
+ 'obtenue par décision du jury. Enregistrée au RNCP sous le n° 37827, validité permanente.',
+ 'certification', ARRAY['RNCP 37827','Niveau 6','Simplon'], 'https://www.francecompetences.fr/recherche/rncp/37827/', 7, TRUE,
+ 'RNCP Level 6 degree — Artificial Intelligence Developer',
+ 'Level 6 professional certification (Bachelor''s level, EQF 6) awarded by Simplon.co after the Microsoft School, '
+ 'granted by jury decision. Registered in the French National Register of Professional Certifications (RNCP 37827), '
+ 'permanently valid.',
+ 'Título RNCP nivel 6 — Desarrollador en inteligencia artificial',
+ 'Certificación profesional de nivel 6 (grado universitario, MEC 6) otorgada por Simplon.co al término de la Escuela '
+ 'Microsoft, por decisión del jurado. Registrada en el RNCP con el n.º 37827, validez permanente.'
+WHERE NOT EXISTS (SELECT 1 FROM timeline_events WHERE title LIKE 'Titre RNCP niveau 6%');
+
+UPDATE profile SET
+  bio = replace(bio, 'via l''École Microsoft by Simplon.',
+    'via l''École Microsoft by Simplon, dont je suis diplômé (titre RNCP de niveau 6, Développeur en intelligence artificielle).'),
+  bio_es = replace(bio_es, 'a través de la École Microsoft by Simplon.',
+    'a través de la École Microsoft by Simplon, de la que soy titulado (título RNCP de nivel 6, Desarrollador en inteligencia artificial).'),
+  bio_en = CASE WHEN bio_en LIKE '%RNCP%' THEN bio_en ELSE bio_en ||
+    ' I hold a French level 6 professional degree (RNCP) as an Artificial Intelligence Developer, earned at the Microsoft School by Simplon.' END
+WHERE bio NOT LIKE '%RNCP%';

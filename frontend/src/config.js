@@ -38,11 +38,11 @@ export const SITE = {
   heroFacts: {
     fr: [
       { icon: "briefcase", text: "Développeur IA — Midas / Mobivia" },
-      { icon: "school", text: "Simplon × Microsoft (2024–2026)" },
+      { icon: "school", text: "Titre RNCP niv. 6 — Développeur en IA (Simplon × Microsoft)" },
     ],
     en: [
       { icon: "briefcase", text: "AI Developer — Midas / Mobivia" },
-      { icon: "school", text: "Simplon × Microsoft (2024–2026)" },
+      { icon: "school", text: "Level 6 degree — AI Developer (Simplon × Microsoft)" },
     ],
   },
 };
