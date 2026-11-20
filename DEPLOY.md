@@ -1,5 +1,16 @@
 # Déploiement (VPS + Docker + Caddy + HTTPS)
 
+> **Depuis le 20/11/2026 : VPS OVH** (`ssh ovh` = ubuntu@164.132.100.109), l'ancien VPS Hetzner a été supprimé.
+> Organisation propre à ce serveur (gérée avec la commande `/vps` de Claude Code) :
+> - `/srv/apps/portfolio/code` : clone en lecture seule (deploy key « VPS OVH (lecture seule) ») ;
+> - `/srv/apps/portfolio/compose.yml` : backend + frontend seulement ; la base est le **Postgres partagé** du
+>   serveur (base et utilisateur `portfolio`), Caddy est celui du serveur (`/srv/infra/caddy/sites/portfolio.caddy`) ;
+> - `/srv/apps/portfolio/.env` (chmod 600) : secrets ; `uploads/` : photo et CV envoyés depuis l'admin.
+> - Mise à jour : `ssh ovh 'cd /srv/apps/portfolio/code && git pull && cd .. && docker compose up -d --build'`.
+> - Sauvegarde de la base : automatique chaque nuit (`vps-sauvegarde`, toutes les bases du serveur).
+>
+> La suite de ce document décrit l'installation d'origine (Caddy et Postgres propres au projet).
+
 Stack : `db` + `backend` + `frontend` (internes) derrière **Caddy** (80/443, HTTPS
 automatique via Let's Encrypt). Cohabite avec d'autres services sur le VPS.
 
